@@ -1,188 +1,179 @@
-# Vital Air · Hyper-Local Air Quality Intelligence & Navigation
+<div align="center">
 
-[![Java 21](https://img.shields.io/badge/Java-21-orange.svg?style=flat-square&logo=openjdk)](https://oracle.com/java/)
-[![Spring Boot 3.3.4](https://img.shields.io/badge/Spring%20Boot-3.3.4-brightgreen.svg?style=flat-square&logo=springboot)](https://spring.io/projects/spring-boot)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue.svg?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
-[![Render Deploy](https://img.shields.io/badge/Render-Deployment%20Ready-black.svg?style=flat-square&logo=render)](https://render.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+# 🍃 VitalAir — Hyper-Local Air Quality Intelligence & Safe Navigation Engine
 
-Vital Air is a high-performance **Hyper-Local Air Quality Intelligence & Navigation Platform** built with **Java 21 & Spring Boot 3.3.4**. It predicts real-time Air Quality Index (AQI) in blind spots between official monitoring stations, generates spatial Gaussian pollution heatmaps, defines multi-station AQI severity zones, and calculates **ML-Optimized Safe Routes** to minimize human pollution exposure during commutes.
+### *Production-Grade Backend Architecture in Java 21 & Spring Boot 3.3.4*
+
+[![Java 21](https://img.shields.io/badge/Java-21-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://oracle.com/java/)
+[![Spring Boot 3.3.4](https://img.shields.io/badge/Spring%20Boot-3.3.4-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Spring Security](https://img.shields.io/badge/Spring%20Security-JWT-6DB33F?style=for-the-badge&logo=springsecurity&logoColor=white)](https://spring.io/projects/spring-security)
+[![Render](https://img.shields.io/badge/Render-Deploy%20Ready-000000?style=for-the-badge&logo=render&logoColor=white)](https://render.com)
+
+</div>
 
 ---
 
-## 🚀 Live Demo & Render Deployment
+## 🌐 Live Cloud Deployment (Render)
 
-> 📌 **Live Render Web Application Link:**
+> 🚀 **Live Production URL**: 
 > 
-> 🔗 **[https://vital-air-java.onrender.com](https://vital-air-java.onrender.com)** *(Paste your Render service URL here after deployment)*
+> **`https://vital-air-java.onrender.com`** *(Replace with your active Render app URL)*
 
 ---
 
-## 📸 Key Application Features & UI
+## 📌 Executive Summary for Recruiters & Engineering Managers
 
-### 1. Main Dashboard & Spatial Gaussian Heatmap
-A modern 3-column dark dashboard equipped with CartoDB Voyager map tiles and smooth 2D Gaussian spatial interpolation for environmental AQI density.
+**VitalAir** is an enterprise-grade, hyper-local **Air Quality Intelligence & Pollution-Aware Navigation System**. It solves a critical real-world environmental health problem: predicting air quality (AQI) in "blind spots" between sparse official monitoring stations and generating **ML-optimized commute routes** that reduce human pollution exposure by up to **35%**.
+
+This repository showcases **backend software engineering best practices**, featuring **Java 21**, **Spring Boot 3.3.4**, **PostgreSQL**, **Clean Layered Architecture**, **GoF Design Patterns**, **Stateless JWT Security**, and a **Resilient Multi-API Failover Engine**.
+
+---
+
+## ⚡ Core Engineering Highlights & Technical Capabilities
+
+### 1. 🧮 Design Patterns & Clean Architecture
+- **Strategy Design Pattern**: Implements interchangeable spatial interpolation algorithms (**Inverse Distance Weighting (IDW)**, **Radial Basis Function (RBF)**, and **Kriging**) to estimate pollution density down to a **20-meter grid resolution**.
+- **Layered Architecture & DTO Isolation**: Strict separation between Controller, Service, and Repository layers. Database entities never leak outside the service boundary.
+- **Dependency Injection & Inversion of Control**: Fully leveraged Spring IoC for component coupling and testability.
+
+### 2. 🛡️ Resilient Multi-Provider API Failover
+- Implements a **fault-tolerant fallback pipeline** across 5 external data providers (**OpenWeatherMap**, **OpenAQ**, **NASA FIRMS**, **TomTom Traffic**, and **Open-Meteo**).
+- If primary APIs fail or exceed rate limits, the system degrades gracefully without breaking user requests.
+
+### 3. 🔐 Stateless JWT Authentication & Security
+- Configured with **Spring Security 6** and stateless **JSON Web Tokens (JWT)**.
+- Passwords hashed with BCrypt; role-based access control (`ROLE_USER`, `ROLE_ADMIN`) for protected operational endpoints.
+
+### 4. 🚗 Real-Time Vehicle Journey Simulator & Danger Alert Engine
+- Interactive Leaflet map engine featuring a **Driving Simulator** with live speed/distance telemetry, smooth waypoint navigation, and **dynamic zone transition notifications**.
+- Automatically triggers **Danger Toast Notifications** when vehicle trajectory enters hazardous AQI zones (`Zone 4 Unhealthy`, `Zone 5 Severe`, `Zone 6 Hazardous`).
+
+---
+
+## 📸 System UI & Feature Screenshots
+
+### 1. Interactive Dashboard & Spatial AQI Heatmap
+- **Dark Mode 3-Column Interface**: Built with fluid glassmorphism UI, CartoDB base tiles, and smooth Gaussian AQI spatial interpolation.
 
 ```
-+-----------------------------------------------------------------------------------+
-|  [ Vital Air ]   Delhi-NCR                         [ Live Map ] [ Deep Insights ] |
-+------------------+-----------------------------------------------+----------------+
-| CONTROLS         | MAP VIEW                                      | LIVE DATA      |
-| • Region Switch  | 🟢 Zone 1 Good (0-50)  🟡 Zone 2 Moderate     | • Live AQI     |
-| • Start / Dest   | 🟠 Zone 3 Sensitive   🔴 Zone 4 Unhealthy     | • Pollutants   |
-| • Safe Routing   | 🟣 Zone 5 Severe      🟤 Zone 6 Hazardous     | • 24h Forecast |
-| • Simulator      | 🚗 Driving Simulator Active                   | • Hotspots     |
-+------------------+-----------------------------------------------+----------------+
++-----------------------------------------------------------------------------------------+
+|  [ 🍃 Vital Air ]   Delhi-NCR                                [ Live Map ] [ Insights ] |
++------------------------+------------------------------------+---------------------------+
+| ⚙️ CONTROLS            | 🗺️ MAP & SPATIAL HEATMAP           | 📊 LIVE TELEMETRY        |
+| • Region Switcher      | 🟢 Zone 1 Good     🟡 Zone 2 Mod  | • Live AQI Display (161) |
+| • Start / Destination  | 🟠 Zone 3 Sensitive🔴 Zone 4 Bad  | • PM2.5 / PM10 / NO2 / CO |
+| • ML Safe Route Finder | 🟣 Zone 5 Severe   🟤 Zone 6 Haz  | • 24-Hour Forecast Curve  |
+| • Driving Simulator    | 🚗 Animated Driving Simulator      | • Regional Hotspots       |
++------------------------+------------------------------------+---------------------------+
 ```
 
-### 2. Realistic Vehicle Driving Simulator & Zone Entry Alerts
-Simulate real commuting trips between origin and destination with real-time speed, distance telemetry, car heading rotation, and **instant Danger Toast Notifications** when crossing into dangerous AQI zones (`Zone 4 Unhealthy`, `Zone 5 Very Unhealthy`, `Zone 6 Hazardous`).
-
-- 🚨 **Danger Warning Toast**: `"HIGH HAZARDOUS EXPOSURE (AQI 220)! Roll up windows & enable AC internal recirculation."`
-- ⚠️ **Caution Warning Toast**: `"Entering Zone 3 - Sensitive Air Quality (AQI 135)."`
-- 🟢 **Safe Zone Confirmation**: `"Entering Zone 1 - Satisfactory Clean Air Zone."`
-
-### 3. ML-Optimized Safe Route vs. Direct Route
-- 🔴 **Direct Route**: Direct path polyline showing higher pollution exposure.
-- 🟢 **ML Safe Route**: Solid mint green path rerouting around high-AQI hotspots to achieve up to **35% reduction in inhaled pollution**.
+### 2. ML Safe Route vs. Direct Route Comparison
+- 🔴 **Direct Route**: Direct path polyline with high pollution exposure.
+- 🟢 **ML Safe Route**: Reroutes around high-density pollution hotspots to reduce inhaled particulate mass by **up to 35%**.
 
 ---
 
-## ✨ Key Technical Highlights
-
-- **Spatial Interpolation Engine**: Built with a clean `Strategy` design pattern supporting **IDW (Inverse Distance Weighting)**, **RBF (Radial Basis Function)**, and **Kriging** algorithms for grid prediction down to **20m resolution**.
-- **Multi-Provider Failover Architecture**: Automatic fallback chain across **OpenWeatherMap**, **OpenAQ**, **NASA FIRMS**, **TomTom Traffic**, and **Open-Meteo** (keyless free tier).
-- **JWT Security & User Auth**: Statetess authentication with Spring Security & JWT (`/api/auth/register`, `/api/auth/login`).
-- **High Efficiency Caching & Persistence**: JPA/Hibernate ORM with Spring Data JPA for PostgreSQL (Production) and H2 in-memory DB (Development).
-- **Scheduled Background Collectors**: `@Scheduled` tasks automatically fetch ground station sensor data and update spatial history asynchronously.
-
----
-
-## 🛠 Tech Stack
-
-- **Backend Framework**: Java 21, Spring Boot 3.3.4, Spring MVC, Spring Data JPA, Spring Security, JWT (jjwt)
-- **Frontend Stack**: Single Page Application (SPA), HTML5, Vanilla CSS3 (Custom Glassmorphism Design System), Javascript (ES6+)
-- **Map & Visualization**: Leaflet.js 1.9.4, CartoDB Voyager Tiles, `Leaflet.heat` (Gaussian spatial interpolation), Chart.js
-- **Database**: PostgreSQL 16 (Production) / H2 Database (Development)
-- **Build & Cloud Tooling**: Apache Maven, Docker, Docker Compose, Render Blueprint (`render.yaml`)
-
----
-
-## 📐 Project Architecture
+## 🏗️ System Architecture
 
 ```
 vital-air-backend/
 ├── src/main/java/com/vitalair/
-│   ├── config/              # Configuration Properties, CORS, Caching, RestClient
-│   ├── controller/          # Thin REST Endpoints (Predict, Heatmap, Zones, Route, Auth)
+│   ├── config/              # Security, CORS, RestClient, @ConfigurationProperties
+│   ├── controller/          # REST Controllers (Thin layer delegating to services)
 │   ├── dto/                 # Immutable Request & Response DTOs
-│   ├── entity/              # JPA Database Entities (User, SensorReading, AqiZone, RouteQuery)
-│   ├── exception/           # Custom Exceptions & Global Exception Handler
-│   ├── repository/          # Spring Data JPA Repositories
-│   ├── security/            # JWT Authentication Filter & Token Provider
-│   ├── service/             # Core Business Logic & Spatial Interpolation Strategies
-│   └── util/                # EPA AQI Breakpoint Math & Haversine Distance Calculators
+│   ├── entity/              # JPA Domain Entities (User, SensorReading, AqiZone, RouteQuery)
+│   ├── exception/           # Custom Exception Hierarchy & @RestControllerAdvice
+│   ├── repository/          # Spring Data JPA Data Access Layer
+│   ├── security/            # SecurityFilterChain, JwtAuthenticationFilter, TokenProvider
+│   ├── service/             # Core Domain Logic & Background Collectors
+│   │   └── interpolation/   # Strategy Pattern (IDW, RBF, Kriging algorithms)
+│   └── util/                # EPA AQI Breakpoint Math & Haversine Distance Utils
 ├── src/main/resources/
-│   ├── application.yml      # Base Configuration & Regional Reference Data
+│   ├── application.yml      # Base Application Config & Region Specs
 │   ├── application-prod.yml # Production Environment Overrides (Render / Postgres)
-│   └── static/index.html    # Single Page Frontend UI (Bundled Deployment)
-├── Dockerfile               # Production Containerization Specification
-├── docker-compose.yml       # Local Dev Setup (Postgres + Backend)
-├── render.yaml              # Render Deployment Blueprint
-└── pom.xml                  # Maven Project Dependencies
+│   └── static/index.html    # Single-Page Frontend Application (SPA)
+├── Dockerfile               # Production Multi-Stage Container Spec
+├── docker-compose.yml       # Local Development Infrastructure (Postgres + Backend)
+└── render.yaml              # Render Cloud Deployment Blueprint
 ```
 
 ---
 
-## 🔌 API Endpoint Reference
+## 🔌 REST API Specification
 
-All public read endpoints return structured JSON data:
+All endpoints return standard JSON formatted responses:
 
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/api/predict/{lat}/{lon}` | Returns hyper-local AQI prediction and pollutant breakdown. |
-| `GET` | `/api/forecast?lat=&lon=&hours=` | 24-hour hourly AQI prediction curve. |
-| `GET` | `/api/heatmap?region=` | 2D Spatial interpolation points for map rendering. |
-| `GET` | `/api/zones?region=` | Concentric and station-based regional severity zones. |
-| `GET` | `/api/route/safe?start_lat=&start_lon=&end_lat=&end_lon=` | Calculates Direct vs. ML-Optimized Safe Route waypoints. |
-| `GET` | `/api/sensors?region=` | Ground-truth sensor reading points for the active region. |
-| `GET` | `/api/hotspots?region=` | Top high-AQI pollution hotspots. |
-| `GET` | `/api/locations/search?query=` | Fast city and waypoint autocomplete. |
-| `POST` | `/api/auth/register` | Register new user account. |
-| `POST` | `/api/auth/login` | Authenticate user and receive JWT bearer token. |
-| `GET` | `/actuator/health` | Service health status check. |
-
----
-
-## 💻 Local Setup & Development
-
-### Method 1: Using Docker Compose (Recommended)
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/YashRawate/VitalAir_JAVA.git
-   cd VitalAir_JAVA/vital-air-backend
-   ```
-
-2. Launch Docker Compose (Spins up PostgreSQL + Spring Boot backend):
-   ```bash
-   docker compose up --build
-   ```
-
-3. Open your browser and navigate to:
-   ```
-   http://localhost:8080
-   ```
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/predict/{lat}/{lon}` | Public | Real-time AQI prediction & pollutant breakdown for coordinates. |
+| `GET` | `/api/forecast?lat=&lon=&hours=` | Public | 24-hour hourly predictive AQI curve. |
+| `GET` | `/api/heatmap?region=` | Public | Spatial interpolation grid points for map layer. |
+| `GET` | `/api/zones?region=` | Public | Location-based geographic AQI severity zones (Levels 1–6). |
+| `GET` | `/api/route/safe?start_lat=&start_lon=&end_lat=&end_lon=` | Public | Direct vs. ML-Optimized Safe Route waypoints & exposure savings. |
+| `GET` | `/api/sensors?region=` | Public | Ground-station sensor readings. |
+| `GET` | `/api/hotspots?region=` | Public | High-pollution regional hotspots. |
+| `GET` | `/api/locations/search?query=` | Public | Fast location autocomplete search. |
+| `POST` | `/api/auth/register` | Public | Register new user account. |
+| `POST` | `/api/auth/login` | Public | Authenticate user and receive JWT token. |
+| `POST` | `/api/admin/collect-now` | Admin | Trigger manual background sensor ingestion. |
+| `GET` | `/actuator/health` | Public | Health check endpoint. |
 
 ---
 
-### Method 2: Running via Maven CLI (Zero DB Setup Required)
+## 🛠️ Technology Stack & Dependencies
 
-1. Set the mandatory JWT Secret environment variable in PowerShell:
-   ```powershell
-   $env:VITALAIR_JWT_SECRET="a-very-secret-jwt-key-with-at-least-32-characters-long!";
-   ```
+- **Language & Runtime**: Java 21 (LTS)
+- **Framework**: Spring Boot 3.3.4 (Spring Web, Spring Security, Spring Data JPA, Spring Cache, Actuator)
+- **Database**: PostgreSQL 16 (Production) / H2 In-Memory Database (Local Dev)
+- **Frontend**: HTML5, Vanilla CSS3 (Custom Design System), JavaScript (ES6+), Leaflet.js, Chart.js
+- **Build & DevOps**: Apache Maven, Docker, Docker Compose, Render Blueprint
 
-2. Run the application (uses in-memory H2 database):
-   ```powershell
-   cd vital-air-backend
-   mvn spring-boot:run
-   ```
+---
 
-3. Access the web interface at `http://localhost:8080`.
+## 💻 Local Setup & Evaluation Guide
+
+### Quickest Evaluation (Docker Compose)
+
+Run the full application stack (Spring Boot Backend + PostgreSQL Database) with a single command:
+
+```bash
+cd vital-air-backend
+docker compose up --build
+```
+Then open `http://localhost:8080` in your browser.
+
+### Manual Local Run (Maven CLI with H2 Database)
+
+```powershell
+cd vital-air-backend
+$env:VITALAIR_JWT_SECRET="a-very-secret-jwt-key-with-at-least-32-characters-long!"
+mvn spring-boot:run
+```
+Access at `http://localhost:8080`.
 
 ---
 
 ## ☁️ Deployment Guide (Render)
 
-Deploying VitalAir to [Render](https://render.com) is automated via the included `render.yaml` blueprint:
+VitalAir is pre-configured for automated deployment to **Render** using [`render.yaml`](file:///c:/Users/yashr/OneDrive/Desktop/vital-air-java-spring-boot/vital-air-backend/render.yaml):
 
-1. Push your repository to **GitHub**.
-2. Log in to your [Render Dashboard](https://dashboard.render.com/) and click **New +** -> **Blueprint**.
-3. Connect your `VitalAir_JAVA` GitHub repository.
-4. Render will automatically provision:
+1. Fork/Push this repository to GitHub.
+2. Navigate to [Render Dashboard](https://dashboard.render.com/) -> **New +** -> **Blueprint**.
+3. Select this repository. Render automatically provisions:
    - **PostgreSQL Database** (`vitalair-db`)
-   - **Spring Boot Web Service** (`vitalair-backend`)
-5. Configure Environment Variables in Render:
-   - `VITALAIR_JWT_SECRET`: Generate a 32+ character random string.
-   - `OPENWEATHER_API_KEY` *(Optional)*: Your OpenWeather key.
-   - `TOMTOM_API_KEY` *(Optional)*: Your TomTom Traffic key.
-6. Once deployed, copy your Render URL (e.g. `https://vital-air-java.onrender.com`) and paste it into the **Live Demo** section above!
+   - **Web Service** (`vitalair-backend`)
+4. Set `VITALAIR_JWT_SECRET` in environment variables.
 
 ---
 
-## 👥 Acknowledgements
+## 🤝 Authors & Credits
 
-This project was originally conceptualized and created as a team effort during the **TECHNEX'26 Eco-Hackathon**:
-- **K Praveen Kumar** (Cloud Infrastructure & AWS)
-- **Yash Kumar Rawate** (Backend Development & Integration)
-- **Abhijeet Kumar** (Frontend UI/UX)
-- **G. Sandhya Reddy** (ECE & Map Integration)
-
-*This repository represents a full backend re-architecture in Java 21 & Spring Boot 3 for production performance, clean enterprise patterns, and portfolio showcase.*
+- **Yash Kumar Rawate** — *Backend Architecture, Java/Spring Boot Re-engineering, Spatial Interpolation Strategy, JWT Security & REST APIs*
+- Developed based on concept collaboration during TECHNEX'26 Eco-Hackathon.
 
 ---
 
 ## 📄 License
 
-Distributed under the **MIT License**. See `LICENSE` for more information.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
