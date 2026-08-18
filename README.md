@@ -30,6 +30,22 @@ This repository showcases **backend software engineering best practices**, featu
 
 ---
 
+## 📸 System Interface & Key Screenshots
+
+### 1. Interactive Main Dashboard & 2D Spatial AQI Heatmap
+*Features real-time AQI readings, 24-hour predictive curves, pollutant breakdown (PM2.5, PM10, NO₂, CO), and 2D spatial Gaussian interpolation.*
+
+![VitalAir Main Dashboard & Heatmap](docs/images/dashboard_heatmap.png)
+
+---
+
+### 2. Vehicle Journey Simulator & Real-Time Zone Alerts
+*Simulates commuting trips with live vehicle telemetry (speed, distance), car heading rotation, active route waypoints, and dynamic AQI zone boundary danger alerts.*
+
+![VitalAir Vehicle Simulator & Zones](docs/images/vehicle_simulator_zones.png)
+
+---
+
 ## ⚡ Core Engineering Highlights & Technical Capabilities
 
 ### 1. 🧮 Design Patterns & Clean Architecture
@@ -48,29 +64,6 @@ This repository showcases **backend software engineering best practices**, featu
 ### 4. 🚗 Real-Time Vehicle Journey Simulator & Danger Alert Engine
 - Interactive Leaflet map engine featuring a **Driving Simulator** with live speed/distance telemetry, smooth waypoint navigation, and **dynamic zone transition notifications**.
 - Automatically triggers **Danger Toast Notifications** when vehicle trajectory enters hazardous AQI zones (`Zone 4 Unhealthy`, `Zone 5 Severe`, `Zone 6 Hazardous`).
-
----
-
-## 📸 System UI & Feature Screenshots
-
-### 1. Interactive Dashboard & Spatial AQI Heatmap
-- **Dark Mode 3-Column Interface**: Built with fluid glassmorphism UI, CartoDB base tiles, and smooth Gaussian AQI spatial interpolation.
-
-```
-+-----------------------------------------------------------------------------------------+
-|  [ 🍃 Vital Air ]   Delhi-NCR                                [ Live Map ] [ Insights ] |
-+------------------------+------------------------------------+---------------------------+
-| ⚙️ CONTROLS            | 🗺️ MAP & SPATIAL HEATMAP           | 📊 LIVE TELEMETRY        |
-| • Region Switcher      | 🟢 Zone 1 Good     🟡 Zone 2 Mod  | • Live AQI Display (161) |
-| • Start / Destination  | 🟠 Zone 3 Sensitive🔴 Zone 4 Bad  | • PM2.5 / PM10 / NO2 / CO |
-| • ML Safe Route Finder | 🟣 Zone 5 Severe   🟤 Zone 6 Haz  | • 24-Hour Forecast Curve  |
-| • Driving Simulator    | 🚗 Animated Driving Simulator      | • Regional Hotspots       |
-+------------------------+------------------------------------+---------------------------+
-```
-
-### 2. ML Safe Route vs. Direct Route Comparison
-- 🔴 **Direct Route**: Direct path polyline with high pollution exposure.
-- 🟢 **ML Safe Route**: Reroutes around high-density pollution hotspots to reduce inhaled particulate mass by **up to 35%**.
 
 ---
 
