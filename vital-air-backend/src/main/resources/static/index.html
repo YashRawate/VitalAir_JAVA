@@ -558,6 +558,93 @@
             cursor: pointer;
         }
 
+        /* REAL-TIME ZONE ALERT TOAST CONTAINER */
+        .zone-alert-toast-container {
+            position: absolute;
+            top: 64px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            pointer-events: none;
+            width: 420px;
+            max-width: 90%;
+        }
+
+        .zone-toast-card {
+            background: rgba(15, 20, 29, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            pointer-events: auto;
+            animation: slideDownToast 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .zone-toast-card.danger {
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            border-left: 5px solid #ef4444;
+            background: rgba(28, 14, 18, 0.96);
+        }
+
+        .zone-toast-card.caution {
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            border-left: 5px solid #f59e0b;
+            background: rgba(28, 24, 14, 0.96);
+        }
+
+        .zone-toast-card.safe {
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            border-left: 5px solid #22c55e;
+            background: rgba(14, 28, 20, 0.96);
+        }
+
+        .zone-toast-icon {
+            font-size: 20px;
+            margin-top: 2px;
+        }
+
+        .zone-toast-card.danger .zone-toast-icon { color: #ef4444; animation: pulseIcon 0.8s infinite alternate; }
+        .zone-toast-card.caution .zone-toast-icon { color: #f59e0b; }
+        .zone-toast-card.safe .zone-toast-icon { color: #22c55e; }
+
+        .zone-toast-body {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            width: 100%;
+        }
+
+        .zone-toast-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .zone-toast-desc {
+            font-size: 11px;
+            color: #d1d5db;
+            line-height: 1.4;
+        }
+
+        @keyframes slideDownToast {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulseIcon {
+            from { transform: scale(1); }
+            to { transform: scale(1.25); }
+        }
+
         /* MIDDLE PANEL - MAP VIEW */
         .map-panel-container {
             position: relative;
@@ -1144,7 +1231,30 @@
             <!-- SIMULATOR SECTION CONTROLS (Hidden by default) -->
             <div id="simulatorControlsSection" style="display: none; flex-direction: column; gap: 14px;">
                 <div class="section-label">Vehicle Journey Simulator</div>
-                <p style="font-size: 12px; color: var(--text-secondary);">Simulate a trip between origin and destination to monitor real-time exposure variations.</p>
+                <p style="font-size: 12px; color: var(--text-secondary);">Simulate a trip between origin and destination to test real-time zone alerts.</p>
+                
+                <div class="ml-info-card" id="simTelemetryCard" style="display: none; background: rgba(26, 32, 44, 0.9); border: 1px solid var(--accent-amber);">
+                    <div class="ml-info-header" style="color: var(--accent-amber);">
+                        <i class="fas fa-tachometer-alt"></i> Live Vehicle Telemetry
+                    </div>
+                    <div class="ml-info-row">
+                        <span class="ml-info-label">Speed:</span>
+                        <span class="ml-info-val" id="simSpeedVal">48 km/h</span>
+                    </div>
+                    <div class="ml-info-row">
+                        <span class="ml-info-label">Distance:</span>
+                        <span class="ml-info-val" id="simDistVal">0.0 / 12.0 km</span>
+                    </div>
+                    <div class="ml-info-row">
+                        <span class="ml-info-label">Current Zone:</span>
+                        <span class="ml-info-val" id="simZoneVal">Zone 2 - Moderate</span>
+                    </div>
+                    <div class="ml-info-row">
+                        <span class="ml-info-label">Exposure Status:</span>
+                        <span class="ml-info-val" id="simAqiStatusVal" style="color: var(--accent-amber);">AQI 161</span>
+                    </div>
+                </div>
+
                 <button class="sim-btn-start" id="btnStartSimulation"><i class="fas fa-play"></i> Start Driving Simulation</button>
                 <button class="pill-btn" id="btnStopSimulation" style="display: none; width: 100%;"><i class="fas fa-stop"></i> Stop Simulation</button>
             </div>
@@ -1152,6 +1262,9 @@
 
         <!-- CENTER COLUMN - MAP PANEL -->
         <section class="map-panel-container">
+            <!-- REAL-TIME ZONE TRANSITION ALERT TOAST CONTAINER -->
+            <div class="zone-alert-toast-container" id="zoneToastContainer"></div>
+
             <div class="map-top-bar">
                 <div class="confidence-badge" id="confidenceBadge">Current: 95% Confidence</div>
                 <div class="processor-badge"><i class="fas fa-fire-alt"></i> ML Processor Active · Dynamic Heatmap</div>
@@ -1298,6 +1411,7 @@
 
             let startCoords = [28.6139, 77.2090];
             let destCoords = null;
+            let activeRouteWaypoints = [];
 
             // Layers & Map instances
             let map = null;
@@ -1308,12 +1422,14 @@
             let heatmapVisible = true;
             let zonesVisible = true;
             let zoneCircles = [];
+            let currentZoneDefs = [];
             let sensorMarkers = [];
             let popupMarker = null;
             let directPolyline = null;
             let safePolyline = null;
             let simulatorMarker = null;
             let simulatorInterval = null;
+            let lastSimulatedZoneName = null;
 
             // Color helper
             function getAqiColor(aqi) {
@@ -1330,6 +1446,61 @@
                 if (aqi <= 300) return 'Poor';
                 if (aqi <= 400) return 'Very Poor';
                 return 'Severe';
+            }
+
+            // Real-time Zone Alert Notification Toast
+            function showZoneTransitionToast(zoneName, aqi, category) {
+                const container = document.getElementById('zoneToastContainer');
+                if (!container) return;
+
+                let alertType = 'safe';
+                let iconClass = 'fa-check-circle';
+                let titleText = `Entering ${zoneName}`;
+                let descText = `Air quality is ${category} (AQI ${aqi}). Standard outdoor conditions.`;
+
+                if (aqi > 200 || zoneName.includes('Hazardous') || zoneName.includes('Very Unhealthy') || zoneName.includes('Zone 5') || zoneName.includes('Zone 6')) {
+                    alertType = 'danger';
+                    iconClass = 'fa-exclamation-triangle';
+                    titleText = `⚠️ DANGER WARNING: ${zoneName}`;
+                    descText = `HIGH HAZARDOUS EXPOSURE (AQI ${aqi})! Roll up vehicle windows, activate internal AC recirculation, & turn on HEPA filtration.`;
+                } else if (aqi > 150 || zoneName.includes('Unhealthy') || zoneName.includes('Zone 4')) {
+                    alertType = 'danger';
+                    iconClass = 'fa-radiation-alt';
+                    titleText = `🚨 DANGER ALERT: ${zoneName}`;
+                    descText = `Entering Unhealthy Air Zone (AQI ${aqi}). Dense particulate mass ahead along trip route.`;
+                } else if (aqi > 100 || zoneName.includes('Sensitive') || zoneName.includes('Zone 3')) {
+                    alertType = 'caution';
+                    iconClass = 'fa-exclamation-circle';
+                    titleText = `⚠️ CAUTION: ${zoneName}`;
+                    descText = `Moderate Unhealthy Air (AQI ${aqi}). Sensitive individuals minimize direct cabin ventilation.`;
+                } else {
+                    alertType = 'safe';
+                    iconClass = 'fa-shield-heart';
+                    titleText = `🟢 SAFE AIR ZONE: ${zoneName}`;
+                    descText = `Air quality improving (AQI ${aqi}). Lower particulate exposure segment.`;
+                }
+
+                const toast = document.createElement('div');
+                toast.className = `zone-toast-card ${alertType}`;
+                toast.innerHTML = `
+                    <div class="zone-toast-icon"><i class="fas ${iconClass}"></i></div>
+                    <div class="zone-toast-body">
+                        <div class="zone-toast-title">
+                            <span>${titleText}</span>
+                            <span style="font-family: var(--font-mono); font-size: 11px; color: rgba(255,255,255,0.7);">AQI ${aqi}</span>
+                        </div>
+                        <div class="zone-toast-desc">${descText}</div>
+                    </div>
+                `;
+
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(-10px)';
+                    toast.style.transition = 'all 0.3s ease';
+                    setTimeout(() => toast.remove(), 300);
+                }, 4500);
             }
 
             // Initialize Leaflet Map (Using Voyager Map Tile)
@@ -1370,10 +1541,12 @@
                     if (res.ok) {
                         const data = await res.json();
                         updateLiveAqiUI(data, name || currentLocationName);
+                        return data;
                     }
                 } catch (e) {
                     console.log('Prediction API error, fallback:', e);
                 }
+                return null;
             }
 
             function updateLiveAqiUI(data, name) {
@@ -1517,6 +1690,7 @@
                     const res = await fetch(`/api/zones?region=${currentRegion}`);
                     if (res.ok) {
                         const data = await res.json();
+                        currentZoneDefs = data;
                         renderZones(data);
                     }
                 } catch (e) {
@@ -1543,7 +1717,7 @@
                     ];
                 }
 
-                // Sort descending by radiusKm so larger circles render underneath smaller circles
+                currentZoneDefs = zones;
                 const sortedZones = [...zones].sort((a, b) => (b.radiusKm || 0) - (a.radiusKm || 0));
 
                 sortedZones.forEach(z => {
@@ -1744,6 +1918,8 @@
                 const safePoints = routeData.safe?.waypoints || [startCoords, destCoords];
                 const directPoints = routeData.direct?.waypoints || [startCoords, destCoords];
 
+                activeRouteWaypoints = safePoints;
+
                 // Direct Route (Red/Orange dashed)
                 directPolyline = L.polyline(directPoints, {
                     color: '#ef4444',
@@ -1839,37 +2015,95 @@
                 document.getElementById('journeyControlsSection').style.display = 'none';
             });
 
-            // Simulator driving execution
-            document.getElementById('btnStartSimulation').addEventListener('click', () => {
-                if (!destCoords) destCoords = [startCoords[0] + 0.04, startCoords[1] + 0.04];
-                let step = 0;
-                const totalSteps = 20;
+            // REALISTIC DRIVING SIMULATOR ENGINE
+            function getMatchingZoneName(lat, lon, aqi) {
+                if (aqi <= 50) return 'Zone 1 - Good';
+                if (aqi <= 100) return 'Zone 2 - Moderate';
+                if (aqi <= 150) return 'Zone 3 - Unhealthy for Sensitive';
+                if (aqi <= 200) return 'Zone 4 - Unhealthy';
+                if (aqi <= 300) return 'Zone 5 - Very Unhealthy';
+                return 'Zone 6 - Hazardous';
+            }
+
+            document.getElementById('btnStartSimulation').addEventListener('click', async () => {
+                if (!destCoords) destCoords = [startCoords[0] + 0.05, startCoords[1] + 0.05];
+
+                // Build detailed driving route waypoints
+                let waypoints = activeRouteWaypoints;
+                if (!waypoints || waypoints.length < 2) {
+                    waypoints = [];
+                    const totalSubSteps = 30;
+                    for (let s = 0; s <= totalSubSteps; s++) {
+                        const lat = startCoords[0] + (destCoords[0] - startCoords[0]) * (s / totalSubSteps);
+                        const lon = startCoords[1] + (destCoords[1] - startCoords[1]) * (s / totalSubSteps);
+                        waypoints.push([lat, lon]);
+                    }
+                }
 
                 document.getElementById('btnStartSimulation').style.display = 'none';
                 document.getElementById('btnStopSimulation').style.display = 'block';
+                document.getElementById('simTelemetryCard').style.display = 'flex';
+
+                let currentWaypointIdx = 0;
+                lastSimulatedZoneName = null;
 
                 if (simulatorMarker) map.removeLayer(simulatorMarker);
                 const carIcon = L.divIcon({
                     className: 'car-sim-marker',
-                    html: `<div style="background: #27c98e; color: #000; padding: 6px; border-radius: 50%; font-size: 14px; border: 2px solid #fff;"><i class="fas fa-car"></i></div>`,
-                    iconSize: [28, 28]
+                    html: `<div id="carSimIconInner" style="background: #27c98e; color: #000; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; border: 2px solid #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.5); transition: transform 0.3s ease;"><i class="fas fa-car-side"></i></div>`,
+                    iconSize: [32, 32]
                 });
-                simulatorMarker = L.marker(startCoords, { icon: carIcon }).addTo(map);
+                simulatorMarker = L.marker(waypoints[0], { icon: carIcon }).addTo(map);
 
-                simulatorInterval = setInterval(() => {
-                    step++;
-                    const lat = startCoords[0] + (destCoords[0] - startCoords[0]) * (step / totalSteps);
-                    const lon = startCoords[1] + (destCoords[1] - startCoords[1]) * (step / totalSteps);
-                    simulatorMarker.setLatLng([lat, lon]);
+                // Pan map smoothly to start position
+                map.panTo(waypoints[0]);
 
-                    fetchAqiPrediction(lat, lon, "Driving Simulation");
-
-                    if (step >= totalSteps) {
+                simulatorInterval = setInterval(async () => {
+                    if (currentWaypointIdx >= waypoints.length) {
                         clearInterval(simulatorInterval);
                         document.getElementById('btnStartSimulation').style.display = 'block';
                         document.getElementById('btnStopSimulation').style.display = 'none';
+                        return;
                     }
-                }, 800);
+
+                    const pt = waypoints[currentWaypointIdx];
+                    const nextPt = waypoints[Math.min(currentWaypointIdx + 1, waypoints.length - 1)];
+                    
+                    simulatorMarker.setLatLng(pt);
+                    map.panTo(pt, { animate: true, duration: 0.5 });
+
+                    // Rotate car icon according to heading direction
+                    const carEl = document.getElementById('carSimIconInner');
+                    if (carEl && (pt[0] !== nextPt[0] || pt[1] !== nextPt[1])) {
+                        const angle = (Math.atan2(nextPt[1] - pt[1], nextPt[0] - pt[0]) * 180 / Math.PI);
+                        carEl.style.transform = `rotate(${angle}deg)`;
+                    }
+
+                    // Fetch prediction & evaluate zone
+                    const pred = await fetchAqiPrediction(pt[0], pt[1], `Simulation (${Math.round((currentWaypointIdx/waypoints.length)*100)}%)`);
+                    const aqi = pred?.aqi || (140 + Math.round(Math.sin(currentWaypointIdx * 0.5) * 60));
+                    const category = pred?.category || getAqiCategory(aqi);
+                    const currentZoneName = getMatchingZoneName(pt[0], pt[1], aqi);
+
+                    // Telemetry update
+                    const totalKm = 12.0;
+                    const coveredKm = ((currentWaypointIdx / (waypoints.length - 1)) * totalKm).toFixed(1);
+                    document.getElementById('simSpeedVal').innerText = `${42 + (currentWaypointIdx % 5) * 3} km/h`;
+                    document.getElementById('simDistVal').innerText = `${coveredKm} / ${totalKm} km`;
+                    document.getElementById('simZoneVal').innerText = currentZoneName;
+                    
+                    const statusVal = document.getElementById('simAqiStatusVal');
+                    statusVal.innerText = `AQI ${aqi} (${category})`;
+                    statusVal.style.color = getAqiColor(aqi);
+
+                    // TRIGGER DANGER NOTIFICATION UPON ZONE TRANSITION!
+                    if (lastSimulatedZoneName !== currentZoneName) {
+                        showZoneTransitionToast(currentZoneName, aqi, category);
+                        lastSimulatedZoneName = currentZoneName;
+                    }
+
+                    currentWaypointIdx++;
+                }, 1000);
             });
 
             document.getElementById('btnStopSimulation').addEventListener('click', () => {
