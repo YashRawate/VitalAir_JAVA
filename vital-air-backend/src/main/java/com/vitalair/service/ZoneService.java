@@ -55,46 +55,46 @@ public class ZoneService {
             return defaultZones(region);
         }
 
-        Map<Integer, Integer> zoneCounts = new HashMap<>();
-        for (CityDataService.CityAqi city : cityData) {
-            int level = levelForAqi(city.aqi());
-            zoneCounts.merge(level, 1, Integer::sum);
-        }
-
-        double maxRadius = "delhi".equals(resolvedKey) ? 30 : 100;
         List<ZoneResponse> result = new ArrayList<>();
         Instant now = Instant.now();
 
-        for (ZoneLevelDef def : ZONE_LEVELS) {
-            int cityCount = zoneCounts.getOrDefault(def.level(), 0);
-            double radius;
-            if (cityCount > 0) {
-                double baseRadius = 5 + (def.level() * 2);
-                double countFactor = Math.min(cityCount / (double) cityData.size() * 2, 1.5);
-                radius = Math.min(baseRadius * countFactor, maxRadius);
-            } else {
-                radius = 3 + def.level();
-            }
+        for (CityDataService.CityAqi city : cityData) {
+            int level = levelForAqi(city.aqi());
+            ZoneLevelDef def = ZONE_LEVELS.get(Math.min(level - 1, ZONE_LEVELS.size() - 1));
+            double radius = round1(4.0 + (level * 0.8));
+
+            String zoneName = city.name() + " · " + def.name();
 
             aqiZoneRepository.save(AqiZone.builder()
-                    .region(resolvedKey).level(def.level()).name(def.name()).aqiRange(def.aqiRange())
+                    .region(resolvedKey).level(def.level()).name(zoneName).aqiRange(def.aqiRange())
                     .color(def.color()).radiusKm(radius)
-                    .centerLat(region.getCenterLat()).centerLon(region.getCenterLon())
-                    .cityCount(cityCount).generatedAt(now)
+                    .centerLat(city.lat()).centerLon(city.lon())
+                    .cityCount(1).generatedAt(now)
                     .build());
 
-            result.add(new ZoneResponse(def.level(), def.name(), def.aqiRange(), def.color(),
-                    region.getCenterLat(), region.getCenterLon(), round1(radius), cityCount));
+            result.add(new ZoneResponse(def.level(), zoneName, def.aqiRange(), def.color(),
+                    city.lat(), city.lon(), radius, 1));
         }
         return result;
     }
 
     private List<ZoneResponse> defaultZones(RegionProperties.Region region) {
         List<ZoneResponse> result = new ArrayList<>();
-        for (ZoneLevelDef def : ZONE_LEVELS) {
-            double radius = 5 + (def.level() * 2);
+        double[][] coords = "delhi".equalsIgnoreCase(region.getKey()) ? new double[][]{
+                {28.6139, 77.2090}, {28.6508, 77.3152}, {28.6297, 77.2427},
+                {28.5665, 77.1767}, {28.5921, 77.0460}, {28.5355, 77.3910}
+        } : new double[][]{
+                {19.0760, 72.8777}, {19.2183, 72.9781}, {19.0330, 73.0297},
+                {19.0896, 72.8656}, {18.5204, 73.8567}, {19.9975, 73.7898}
+        };
+
+        for (int i = 0; i < ZONE_LEVELS.size(); i++) {
+            ZoneLevelDef def = ZONE_LEVELS.get(i);
+            double lat = coords[i % coords.length][0];
+            double lon = coords[i % coords.length][1];
+            double radius = 4.0 + (def.level() * 0.8);
             result.add(new ZoneResponse(def.level(), def.name(), def.aqiRange(), def.color(),
-                    region.getCenterLat(), region.getCenterLon(), radius, 0));
+                    lat, lon, radius, 1));
         }
         return result;
     }

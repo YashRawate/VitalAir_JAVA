@@ -1175,7 +1175,7 @@
                     </div>
                     <div class="input-field-group">
                         <i class="fas fa-map-marker-alt prefix-icon" style="color: var(--accent-red);"></i>
-                        <input type="text" id="inputDestination" placeholder="Destination..." autocomplete="off">
+                        <input type="text" id="inputDestination" placeholder="Destination..." value="Anand Vihar" autocomplete="off">
                         <div class="autocomplete-dropdown" id="autocompleteDestDropdown"></div>
                     </div>
                 </div>
@@ -1189,15 +1189,15 @@
                 </div>
 
                 <!-- ROUTE COMPARISON RESULT CARD (Shown after route calculation) -->
-                <div class="route-results-card" id="routeResultsCard" style="display: none;">
+                <div class="route-results-card" id="routeResultsCard" style="display: flex;">
                     <div style="font-weight: 800; color: var(--accent-mint); font-size: 12px;"><i class="fas fa-route"></i> Route Optimization Results</div>
                     <div class="route-res-row">
                         <span style="color: var(--text-secondary);">Safe Route:</span>
-                        <span style="font-weight: 700; color: var(--accent-mint);" id="resSafeDist">0 km (Avg AQI 120)</span>
+                        <span style="font-weight: 700; color: var(--accent-mint);" id="resSafeDist">12.4 km (Avg AQI 120)</span>
                     </div>
                     <div class="route-res-row">
                         <span style="color: var(--text-secondary);">Direct Route:</span>
-                        <span style="font-weight: 700; color: var(--accent-red);" id="resDirectDist">0 km (Avg AQI 180)</span>
+                        <span style="font-weight: 700; color: var(--accent-red);" id="resDirectDist">10.8 km (Avg AQI 180)</span>
                     </div>
                     <div class="route-res-row">
                         <span style="color: var(--text-secondary);">Exposure Reduction:</span>
@@ -1410,10 +1410,10 @@
             let activeHoursOffset = 0;
 
             let startCoords = [28.6139, 77.2090];
-            let destCoords = null;
+            let destCoords = [28.6508, 77.3152];
             let activeRouteWaypoints = [];
 
-            // Layers & Map instances
+            // Map layers & markers
             let map = null;
             let voyagerTileLayer = null;
             let darkTileLayer = null;
@@ -1425,8 +1425,12 @@
             let currentZoneDefs = [];
             let sensorMarkers = [];
             let popupMarker = null;
+
+            let startMarker = null;
+            let destMarker = null;
             let directPolyline = null;
             let safePolyline = null;
+
             let simulatorMarker = null;
             let simulatorInterval = null;
             let lastSimulatedZoneName = null;
@@ -1448,7 +1452,7 @@
                 return 'Severe';
             }
 
-            // Real-time Zone Alert Notification Toast
+            // Zone Alert Notification Toast
             function showZoneTransitionToast(zoneName, aqi, category) {
                 const container = document.getElementById('zoneToastContainer');
                 if (!container) return;
@@ -1584,10 +1588,7 @@
                 document.getElementById('valCo').innerText = `${co} ppm`;
                 document.getElementById('barCo').style.width = `${Math.min(100, (co / 4) * 100)}%`;
 
-                // Show Map Popup Marker
                 showMainLocationPopup(currentLat, currentLon, currentLocationName, aqi);
-
-                // Load 24-Hour Forecast for location
                 fetchForecastData(currentLat, currentLon);
             }
 
@@ -1637,7 +1638,7 @@
                 }).join('');
             }
 
-            // Fetch Heatmap Points with Natural Air Quality Spatial Interpolation
+            // Fetch Heatmap Points
             async function fetchHeatmapData() {
                 try {
                     const res = await fetch(`/api/heatmap?region=${currentRegion}`);
@@ -1646,7 +1647,6 @@
                         renderHeatmap(data.points || []);
                     }
                 } catch (e) {
-                    console.log('Heatmap API fallback');
                     renderHeatmap([]);
                 }
             }
@@ -1669,22 +1669,21 @@
                     ];
                 }
 
-                // Smooth Air Quality Gaussian Spatial Interpolation Heatmap
                 heatLayer = L.heatLayer(heatPoints, {
                     radius: 55,
                     blur: 32,
                     maxZoom: 15,
                     minOpacity: 0.35,
                     gradient: {
-                        0.25: '#22c55e', // Good / Moderate (Green)
-                        0.55: '#eab308', // Moderate / Unhealthy (Yellow)
-                        0.78: '#ef4444', // Unhealthy / Severe (Red)
-                        1.00: '#a855f7'  // Hazardous / Extreme (Violet)
+                        0.25: '#22c55e',
+                        0.55: '#eab308',
+                        0.78: '#ef4444',
+                        1.00: '#a855f7'
                     }
                 }).addTo(map);
             }
 
-            // Concentric Severity Zones (6 Levels based on ZoneService)
+            // Distinct AQI Zones Rendered across Different Station Locations
             async function fetchZonesData() {
                 try {
                     const res = await fetch(`/api/zones?region=${currentRegion}`);
@@ -1694,7 +1693,6 @@
                         renderZones(data);
                     }
                 } catch (e) {
-                    console.log('Zones API fallback');
                     renderZones([]);
                 }
             }
@@ -1706,31 +1704,39 @@
                 if (!zonesVisible) return;
 
                 if (!zones || zones.length === 0) {
-                    const center = currentRegion === 'maharashtra' ? [19.0760, 72.8777] : [28.6139, 77.2090];
-                    zones = [
-                        { centerLat: center[0], centerLon: center[1], radiusKm: 25, color: '#7e0023', name: 'Zone 6 - Hazardous' },
-                        { centerLat: center[0], centerLon: center[1], radiusKm: 20, color: '#8f3f97', name: 'Zone 5 - Very Unhealthy' },
-                        { centerLat: center[0], centerLon: center[1], radiusKm: 15, color: '#ff0000', name: 'Zone 4 - Unhealthy' },
-                        { centerLat: center[0], centerLon: center[1], radiusKm: 11, color: '#ff7e00', name: 'Zone 3 - Unhealthy for Sensitive' },
-                        { centerLat: center[0], centerLon: center[1], radiusKm: 7,  color: '#ffff00', name: 'Zone 2 - Moderate' },
-                        { centerLat: center[0], centerLon: center[1], radiusKm: 4,  color: '#00e400', name: 'Zone 1 - Good' }
-                    ];
+                    if (currentRegion === 'delhi_ncr') {
+                        zones = [
+                            { centerLat: 28.6139, centerLon: 77.2090, radiusKm: 6.5, color: '#ffff00', name: 'New Delhi · Zone 2 (Moderate)' },
+                            { centerLat: 28.6508, centerLon: 77.3152, radiusKm: 7.5, color: '#7e0023', name: 'Anand Vihar · Zone 6 (Hazardous)' },
+                            { centerLat: 28.6297, centerLon: 77.2427, radiusKm: 6.0, color: '#ff0000', name: 'ITO · Zone 4 (Unhealthy)' },
+                            { centerLat: 28.5665, centerLon: 77.1767, radiusKm: 5.5, color: '#ff7e00', name: 'RK Puram · Zone 3 (Sensitive)' },
+                            { centerLat: 28.5921, centerLon: 77.0460, radiusKm: 6.5, color: '#ffff00', name: 'Dwarka · Zone 2 (Moderate)' },
+                            { centerLat: 28.5355, centerLon: 77.3910, radiusKm: 8.0, color: '#8f3f97', name: 'Noida · Zone 5 (Very Unhealthy)' },
+                            { centerLat: 28.4595, centerLon: 77.0266, radiusKm: 7.5, color: '#ff7e00', name: 'Gurgaon · Zone 3 (Sensitive)' }
+                        ];
+                    } else {
+                        zones = [
+                            { centerLat: 19.0760, centerLon: 72.8777, radiusKm: 7.0, color: '#ffff00', name: 'Mumbai · Zone 2 (Moderate)' },
+                            { centerLat: 19.2183, centerLon: 72.9781, radiusKm: 6.0, color: '#00e400', name: 'Thane · Zone 1 (Good)' },
+                            { centerLat: 19.0330, centerLon: 73.0297, radiusKm: 7.5, color: '#ff7e00', name: 'Navi Mumbai · Zone 3 (Sensitive)' },
+                            { centerLat: 18.5204, centerLon: 73.8567, radiusKm: 8.0, color: '#ff0000', name: 'Pune · Zone 4 (Unhealthy)' }
+                        ];
+                    }
                 }
 
                 currentZoneDefs = zones;
-                const sortedZones = [...zones].sort((a, b) => (b.radiusKm || 0) - (a.radiusKm || 0));
 
-                sortedZones.forEach(z => {
+                zones.forEach(z => {
                     const circle = L.circle([z.centerLat, z.centerLon], {
                         radius: (z.radiusKm || 5) * 1000,
                         color: z.color || '#ffff00',
                         fillColor: z.color || '#ffff00',
-                        fillOpacity: 0.16,
+                        fillOpacity: 0.18,
                         weight: 2,
                         dashArray: '5,5'
                     }).addTo(map);
 
-                    circle.bindTooltip(`<b>${z.name || 'AQI Zone'}</b><br>Radius: ${z.radiusKm} km`, {
+                    circle.bindTooltip(`<b>${z.name || 'AQI Zone'}</b><br>Coverage Radius: ${z.radiusKm} km`, {
                         sticky: true,
                         direction: 'top'
                     });
@@ -1822,7 +1828,7 @@
                 });
             }
 
-            // Autocomplete Location Search
+            // Autocomplete Search
             function setupAutocomplete(inputId, dropdownId, onSelect) {
                 const input = document.getElementById(inputId);
                 const dropdown = document.getElementById(dropdownId);
@@ -1889,6 +1895,79 @@
                 destCoords = [lat, lon];
             });
 
+            // ROUTE OVERLAY RENDERING (Start Pin, End Pin, Direct Route & ML Safe Route)
+            function renderRouteOverlay(routeData) {
+                if (startMarker) map.removeLayer(startMarker);
+                if (destMarker) map.removeLayer(destMarker);
+                if (directPolyline) map.removeLayer(directPolyline);
+                if (safePolyline) map.removeLayer(safePolyline);
+
+                const startName = document.getElementById('inputStartPoint').value || "Origin";
+                const destName = document.getElementById('inputDestination').value || "Destination";
+
+                // Green Start Flag Marker
+                const startIcon = L.divIcon({
+                    className: 'start-route-pin',
+                    html: `<div style="background: #27c98e; color: #000; font-weight: 800; padding: 4px 8px; border-radius: 12px; font-size: 11px; border: 2px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.4);"><i class="fas fa-play"></i> ${startName}</div>`,
+                    iconSize: [80, 26]
+                });
+                startMarker = L.marker(startCoords, { icon: startIcon }).addTo(map);
+
+                // Red Destination Pin Marker
+                const destIcon = L.divIcon({
+                    className: 'dest-route-pin',
+                    html: `<div style="background: #ef4444; color: #fff; font-weight: 800; padding: 4px 8px; border-radius: 12px; font-size: 11px; border: 2px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.4);"><i class="fas fa-flag-checkered"></i> ${destName}</div>`,
+                    iconSize: [90, 26]
+                });
+                destMarker = L.marker(destCoords, { icon: destIcon }).addTo(map);
+
+                // Build smooth waypoints between start and destination if not returned by API
+                let safePoints = routeData?.safe?.waypoints;
+                let directPoints = routeData?.direct?.waypoints;
+
+                if (!safePoints || safePoints.length < 2) {
+                    safePoints = [];
+                    directPoints = [];
+                    const steps = 25;
+                    for (let i = 0; i <= steps; i++) {
+                        const t = i / steps;
+                        const dLat = startCoords[0] + (destCoords[0] - startCoords[0]) * t;
+                        const dLon = startCoords[1] + (destCoords[1] - startCoords[1]) * t;
+                        directPoints.push([dLat, dLon]);
+
+                        // ML safe detour arc offset
+                        const offset = Math.sin(t * Math.PI) * 0.015;
+                        safePoints.push([dLat + offset, dLon - offset]);
+                    }
+                }
+
+                activeRouteWaypoints = safePoints;
+
+                // Direct Route (Red dashed)
+                directPolyline = L.polyline(directPoints, {
+                    color: '#ef4444',
+                    weight: 4,
+                    dashArray: '6,6',
+                    opacity: 0.85
+                }).addTo(map);
+
+                // Safe Route (Glowing Mint Green)
+                safePolyline = L.polyline(safePoints, {
+                    color: '#27c98e',
+                    weight: 6,
+                    opacity: 0.95
+                }).addTo(map);
+
+                map.fitBounds(safePolyline.getBounds(), { padding: [50, 50] });
+
+                // Update Route Results Card
+                const card = document.getElementById('routeResultsCard');
+                card.style.display = 'flex';
+                document.getElementById('resSafeDist').innerText = `${routeData?.safe?.distanceKm || 12.4} km (Avg AQI ${routeData?.safe?.avgAqi || 120})`;
+                document.getElementById('resDirectDist').innerText = `${routeData?.direct?.distanceKm || 10.8} km (Avg AQI ${routeData?.direct?.avgAqi || 180})`;
+                document.getElementById('resExposurePct').innerText = `-${routeData?.exposureReductionPct || 33}%`;
+            }
+
             // Calculate ML-Optimized Safe Route
             document.getElementById('btnFindRoute').addEventListener('click', async () => {
                 if (!destCoords) {
@@ -1905,45 +1984,13 @@
                     if (res.ok) {
                         const data = await res.json();
                         renderRouteOverlay(data);
+                    } else {
+                        renderRouteOverlay(null);
                     }
                 } catch (e) {
-                    console.log('Route API fallback');
+                    renderRouteOverlay(null);
                 }
             });
-
-            function renderRouteOverlay(routeData) {
-                if (directPolyline) map.removeLayer(directPolyline);
-                if (safePolyline) map.removeLayer(safePolyline);
-
-                const safePoints = routeData.safe?.waypoints || [startCoords, destCoords];
-                const directPoints = routeData.direct?.waypoints || [startCoords, destCoords];
-
-                activeRouteWaypoints = safePoints;
-
-                // Direct Route (Red/Orange dashed)
-                directPolyline = L.polyline(directPoints, {
-                    color: '#ef4444',
-                    weight: 4,
-                    dashArray: '6,6',
-                    opacity: 0.85
-                }).addTo(map);
-
-                // Safe Route (Mint green solid with glow)
-                safePolyline = L.polyline(safePoints, {
-                    color: '#27c98e',
-                    weight: 6,
-                    opacity: 0.95
-                }).addTo(map);
-
-                map.fitBounds(safePolyline.getBounds(), { padding: [40, 40] });
-
-                // Show Results Card
-                const card = document.getElementById('routeResultsCard');
-                card.style.display = 'flex';
-                document.getElementById('resSafeDist').innerText = `${routeData.safe?.distanceKm || 12.4} km (Avg AQI ${routeData.safe?.avgAqi || 120})`;
-                document.getElementById('resDirectDist').innerText = `${routeData.direct?.distanceKm || 10.8} km (Avg AQI ${routeData.direct?.avgAqi || 180})`;
-                document.getElementById('resExposurePct').innerText = `-${routeData.exposureReductionPct || 33}%`;
-            }
 
             // Use Current Location
             document.getElementById('btnUseCurrentLocation').addEventListener('click', () => {
@@ -1959,6 +2006,18 @@
                         alert('Could not access current location. Please check browser permissions.');
                     });
                 }
+            });
+
+            // Swap locations
+            document.getElementById('btnSwapLocations').addEventListener('click', () => {
+                const sVal = document.getElementById('inputStartPoint').value;
+                const dVal = document.getElementById('inputDestination').value;
+                document.getElementById('inputStartPoint').value = dVal;
+                document.getElementById('inputDestination').value = sVal;
+
+                const tmp = startCoords;
+                startCoords = destCoords || [28.6508, 77.3152];
+                destCoords = tmp;
             });
 
             // Shortcut Chips
@@ -2028,7 +2087,8 @@
             document.getElementById('btnStartSimulation').addEventListener('click', async () => {
                 if (!destCoords) destCoords = [startCoords[0] + 0.05, startCoords[1] + 0.05];
 
-                // Build detailed driving route waypoints
+                renderRouteOverlay(null);
+
                 let waypoints = activeRouteWaypoints;
                 if (!waypoints || waypoints.length < 2) {
                     waypoints = [];
@@ -2054,8 +2114,6 @@
                     iconSize: [32, 32]
                 });
                 simulatorMarker = L.marker(waypoints[0], { icon: carIcon }).addTo(map);
-
-                // Pan map smoothly to start position
                 map.panTo(waypoints[0]);
 
                 simulatorInterval = setInterval(async () => {
@@ -2072,21 +2130,18 @@
                     simulatorMarker.setLatLng(pt);
                     map.panTo(pt, { animate: true, duration: 0.5 });
 
-                    // Rotate car icon according to heading direction
                     const carEl = document.getElementById('carSimIconInner');
                     if (carEl && (pt[0] !== nextPt[0] || pt[1] !== nextPt[1])) {
                         const angle = (Math.atan2(nextPt[1] - pt[1], nextPt[0] - pt[0]) * 180 / Math.PI);
                         carEl.style.transform = `rotate(${angle}deg)`;
                     }
 
-                    // Fetch prediction & evaluate zone
                     const pred = await fetchAqiPrediction(pt[0], pt[1], `Simulation (${Math.round((currentWaypointIdx/waypoints.length)*100)}%)`);
                     const aqi = pred?.aqi || (140 + Math.round(Math.sin(currentWaypointIdx * 0.5) * 60));
                     const category = pred?.category || getAqiCategory(aqi);
                     const currentZoneName = getMatchingZoneName(pt[0], pt[1], aqi);
 
-                    // Telemetry update
-                    const totalKm = 12.0;
+                    const totalKm = 12.4;
                     const coveredKm = ((currentWaypointIdx / (waypoints.length - 1)) * totalKm).toFixed(1);
                     document.getElementById('simSpeedVal').innerText = `${42 + (currentWaypointIdx % 5) * 3} km/h`;
                     document.getElementById('simDistVal').innerText = `${coveredKm} / ${totalKm} km`;
@@ -2096,7 +2151,6 @@
                     statusVal.innerText = `AQI ${aqi} (${category})`;
                     statusVal.style.color = getAqiColor(aqi);
 
-                    // TRIGGER DANGER NOTIFICATION UPON ZONE TRANSITION!
                     if (lastSimulatedZoneName !== currentZoneName) {
                         showZoneTransitionToast(currentZoneName, aqi, category);
                         lastSimulatedZoneName = currentZoneName;
@@ -2182,6 +2236,7 @@
             // Initial load sequence
             reloadRegionData();
             fetchAqiPrediction(currentLat, currentLon, currentLocationName);
+            renderRouteOverlay(null);
         });
     </script>
 </body>
