@@ -1185,7 +1185,7 @@
             </div>
         </section>
 
-        <!-- RIGHT COLUMN - LIVE DATA & INSIGHTS -->
+        <!-- RIGHT SIDEBAR - LIVE DATA -->
         <aside class="panel-card">
             <div class="panel-title">
                 <i class="fas fa-chart-bar"></i> Live Data
@@ -1511,7 +1511,7 @@
                 }).addTo(map);
             }
 
-            // Concentric Severity Zones
+            // Concentric Severity Zones (6 Levels based on ZoneService)
             async function fetchZonesData() {
                 try {
                     const res = await fetch(`/api/zones?region=${currentRegion}`);
@@ -1534,22 +1534,33 @@
                 if (!zones || zones.length === 0) {
                     const center = currentRegion === 'maharashtra' ? [19.0760, 72.8777] : [28.6139, 77.2090];
                     zones = [
-                        { centerLat: center[0], centerLon: center[1], radiusKm: 12, color: '#ef4444' },
-                        { centerLat: center[0], centerLon: center[1], radiusKm: 8, color: '#f59e0b' },
-                        { centerLat: center[0], centerLon: center[1], radiusKm: 4, color: '#eab308' },
-                        { centerLat: center[0], centerLon: center[1], radiusKm: 2, color: '#22c55e' }
+                        { centerLat: center[0], centerLon: center[1], radiusKm: 25, color: '#7e0023', name: 'Zone 6 - Hazardous' },
+                        { centerLat: center[0], centerLon: center[1], radiusKm: 20, color: '#8f3f97', name: 'Zone 5 - Very Unhealthy' },
+                        { centerLat: center[0], centerLon: center[1], radiusKm: 15, color: '#ff0000', name: 'Zone 4 - Unhealthy' },
+                        { centerLat: center[0], centerLon: center[1], radiusKm: 11, color: '#ff7e00', name: 'Zone 3 - Unhealthy for Sensitive' },
+                        { centerLat: center[0], centerLon: center[1], radiusKm: 7,  color: '#ffff00', name: 'Zone 2 - Moderate' },
+                        { centerLat: center[0], centerLon: center[1], radiusKm: 4,  color: '#00e400', name: 'Zone 1 - Good' }
                     ];
                 }
 
-                zones.forEach(z => {
+                // Sort descending by radiusKm so larger circles render underneath smaller circles
+                const sortedZones = [...zones].sort((a, b) => (b.radiusKm || 0) - (a.radiusKm || 0));
+
+                sortedZones.forEach(z => {
                     const circle = L.circle([z.centerLat, z.centerLon], {
                         radius: (z.radiusKm || 5) * 1000,
-                        color: z.color || '#eab308',
-                        fillColor: z.color || '#eab308',
-                        fillOpacity: 0.15,
-                        weight: 1.5,
-                        dashArray: '4,4'
+                        color: z.color || '#ffff00',
+                        fillColor: z.color || '#ffff00',
+                        fillOpacity: 0.16,
+                        weight: 2,
+                        dashArray: '5,5'
                     }).addTo(map);
+
+                    circle.bindTooltip(`<b>${z.name || 'AQI Zone'}</b><br>Radius: ${z.radiusKm} km`, {
+                        sticky: true,
+                        direction: 'top'
+                    });
+
                     zoneCircles.push(circle);
                 });
             }
