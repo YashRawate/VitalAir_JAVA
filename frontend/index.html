@@ -558,7 +558,7 @@
             cursor: pointer;
         }
 
-        /* MIDDLE PANEL - MAP VIEW (Matches Mockup Image) */
+        /* MIDDLE PANEL - MAP VIEW */
         .map-panel-container {
             position: relative;
             border-radius: 16px;
@@ -1154,7 +1154,7 @@
         <section class="map-panel-container">
             <div class="map-top-bar">
                 <div class="confidence-badge" id="confidenceBadge">Current: 95% Confidence</div>
-                <div class="processor-badge"><i class="fas fa-fire-alt"></i> ML Processor Active · Dynamic Heatmap</div>
+                <div class="processor-badge"><i class="fas fa-fire-alt"></i> ML Cyclone Heatmap Active</div>
                 <div class="timeline-pill-selector">
                     <button class="timeline-btn active" data-hours="0">NOW</button>
                     <button class="timeline-btn" data-hours="3">+3h</button>
@@ -1167,7 +1167,7 @@
             <div id="map"></div>
 
             <div class="map-bottom-controls">
-                <button class="map-toggle-btn" id="toggleHeatmapBtn"><i class="fas fa-fire"></i> ML Heatmap ON</button>
+                <button class="map-toggle-btn" id="toggleHeatmapBtn"><i class="fas fa-hurricane"></i> Cyclone Heatmap ON</button>
                 <button class="map-toggle-btn" id="toggleZonesBtn"><i class="fas fa-globe"></i> Zones ON</button>
             </div>
 
@@ -1175,13 +1175,13 @@
                 <div class="legend-item"><div class="legend-dot green"></div> Green (0-120)</div>
                 <div class="legend-item"><div class="legend-dot yellow"></div> Yellow (120-200)</div>
                 <div class="legend-item"><div class="legend-dot red"></div> Red (200-250)</div>
-                <div class="legend-item"><div class="legend-dot violet"></div> Violet (250+)</div>
+                <div class="legend-item"><div class="legend-dot violet"></div> Violet Eye (250+)</div>
             </div>
 
             <div class="wind-alert-banner">
                 <i class="fas fa-exclamation-triangle"></i>
                 <i class="fas fa-wind"></i>
-                <span id="windAlertText">Wind from W - Pollution moving East</span>
+                <span id="windAlertText">Cyclone Storm Radar - Swirling West to East</span>
             </div>
         </section>
 
@@ -1332,8 +1332,8 @@
                 return 'Severe';
             }
 
-            // Initialize Leaflet Map (Using Voyager Warm Vintage Map Tile matching the user mockup)
-            map = L.map('map', { zoomControl: false }).setView([currentLat, currentLon], 12);
+            // Initialize Leaflet Map (Using Voyager Map Tile)
+            map = L.map('map', { zoomControl: false }).setView([currentLat, currentLon], 11);
             L.control.zoom({ position: 'topleft' }).addTo(map);
 
             voyagerTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -1348,7 +1348,7 @@
 
             voyagerTileLayer.addTo(map);
 
-            // Open Mockup Style Location Popup Marker on Map
+            // Open Location Popup Marker on Map
             function showMainLocationPopup(lat, lon, name, aqi) {
                 if (popupMarker) map.removeLayer(popupMarker);
                 const popupContent = `
@@ -1464,7 +1464,44 @@
                 }).join('');
             }
 
-            // Fetch Heatmap Points with Vibrant Smooth Radial Design
+            // CYCLONE WEATHER RADAR SPIRAL GENERATOR
+            function generateCycloneSpiral(centerLat, centerLon) {
+                const heatPoints = [];
+                
+                // Eye of Cyclone (Ultra High Intensity Core - White/Magenta)
+                heatPoints.push([centerLat, centerLon, 1.0]);
+                heatPoints.push([centerLat + 0.003, centerLon + 0.003, 0.98]);
+                heatPoints.push([centerLat - 0.003, centerLon - 0.003, 0.98]);
+                heatPoints.push([centerLat + 0.003, centerLon - 0.003, 0.98]);
+                heatPoints.push([centerLat - 0.003, centerLon + 0.003, 0.98]);
+
+                // 4 Swirling Spiral Arms (Logarithmic spiral r = a * e^(b*theta))
+                const numArms = 4;
+                const pointsPerArm = 30;
+                for (let arm = 0; arm < numArms; arm++) {
+                    const armOffset = (arm * 2 * Math.PI) / numArms;
+                    for (let i = 1; i <= pointsPerArm; i++) {
+                        const step = i * 0.35;
+                        const theta = step + armOffset;
+                        const r = 0.005 * Math.exp(0.16 * step); // Spiral expansion factor
+                        
+                        const lat = centerLat + r * Math.sin(theta);
+                        const lon = centerLon + r * Math.cos(theta) * 1.2; // Oval distortion for wind movement
+                        const intensity = Math.max(0.15, 1.0 - (i / pointsPerArm) * 0.85);
+
+                        heatPoints.push([lat, lon, intensity]);
+
+                        // Secondary swirl particles
+                        if (i % 2 === 0) {
+                            heatPoints.push([lat + 0.004 * Math.cos(theta), lon + 0.004 * Math.sin(theta), intensity * 0.8]);
+                        }
+                    }
+                }
+
+                return heatPoints;
+            }
+
+            // Fetch Heatmap Points with Cyclone Weather Radar Effect
             async function fetchHeatmapData() {
                 try {
                     const res = await fetch(`/api/heatmap?region=${currentRegion}`);
@@ -1478,39 +1515,45 @@
                 }
             }
 
-            function renderHeatmap(points) {
+            function renderHeatmap(rawPoints) {
                 if (heatLayer) map.removeLayer(heatLayer);
                 if (!heatmapVisible) return;
 
-                let heatPoints = [];
-                if (points && points.length > 0) {
-                    heatPoints = points.map(p => [p.lat, p.lon, p.intensity || (p.aqi / 300)]);
-                } else {
-                    const center = currentRegion === 'maharashtra' ? [19.0760, 72.8777] : [28.6139, 77.2090];
-                    heatPoints = [
-                        [center[0], center[1], 0.85],
-                        [center[0] + 0.02, center[1] + 0.03, 0.95],
-                        [center[0] - 0.02, center[1] + 0.02, 0.75],
-                        [center[0] + 0.01, center[1] - 0.03, 0.8],
-                        [center[0] - 0.03, center[1] - 0.02, 0.65]
-                    ];
+                const centerLat = currentRegion === 'maharashtra' ? 19.0760 : 28.6139;
+                const centerLon = currentRegion === 'maharashtra' ? 72.8777 : 77.2090;
+
+                // Combine backend points + generated Cyclone Weather Radar Spiral
+                let cyclonePoints = generateCycloneSpiral(centerLat, centerLon);
+                
+                if (rawPoints && rawPoints.length > 0) {
+                    rawPoints.forEach(p => {
+                        cyclonePoints.push([p.lat, p.lon, p.intensity || (p.aqi / 300)]);
+                        // Add sub-cyclone spiral for major hotspots
+                        if (p.aqi > 150) {
+                            const subSpiral = generateCycloneSpiral(p.lat, p.lon);
+                            cyclonePoints = cyclonePoints.concat(subSpiral);
+                        }
+                    });
                 }
 
-                heatLayer = L.heatLayer(heatPoints, {
-                    radius: 65,
-                    blur: 35,
-                    maxZoom: 15,
-                    minOpacity: 0.35,
+                // Cyclone Weather Radar Heat Gradient (White/Magenta core -> Violet -> Red -> Yellow -> Emerald Green)
+                heatLayer = L.heatLayer(cyclonePoints, {
+                    radius: 75,
+                    blur: 28,
+                    maxZoom: 14,
+                    minOpacity: 0.4,
                     gradient: {
-                        0.2: '#22c55e',
-                        0.5: '#eab308',
-                        0.75: '#ef4444',
-                        1.0: '#a855f7'
+                        0.1: 'rgba(34, 197, 94, 0.4)',    // Outer green spiral arm
+                        0.3: 'rgba(234, 179, 8, 0.7)',    // Yellow wind band
+                        0.55: 'rgba(249, 115, 22, 0.85)', // Orange storm band
+                        0.75: 'rgba(239, 68, 68, 0.95)',  // Red eyewall storm
+                        0.9: 'rgba(168, 85, 247, 1.0)',   // Violet cyclone core
+                        1.0: 'rgba(255, 255, 255, 1.0)'   // White intense cyclone eye
                     }
                 }).addTo(map);
             }
 
-            // Concentric Severity Zones (Multi-ring Heatmap effect matching mockup)
+            // Concentric Isobaric Cyclone Eye Rings
             async function fetchZonesData() {
                 try {
                     const res = await fetch(`/api/zones?region=${currentRegion}`);
@@ -1530,24 +1573,25 @@
 
                 if (!zonesVisible) return;
 
-                if (!zones || zones.length === 0) {
-                    const center = currentRegion === 'maharashtra' ? [19.0760, 72.8777] : [28.6139, 77.2090];
-                    zones = [
-                        { centerLat: center[0], centerLon: center[1], radiusKm: 12, color: '#ef4444' },
-                        { centerLat: center[0], centerLon: center[1], radiusKm: 8, color: '#f59e0b' },
-                        { centerLat: center[0], centerLon: center[1], radiusKm: 4, color: '#eab308' },
-                        { centerLat: center[0], centerLon: center[1], radiusKm: 2, color: '#22c55e' }
-                    ];
-                }
+                const centerLat = currentRegion === 'maharashtra' ? 19.0760 : 28.6139;
+                const centerLon = currentRegion === 'maharashtra' ? 72.8777 : 77.2090;
 
-                zones.forEach(z => {
-                    const circle = L.circle([z.centerLat, z.centerLon], {
-                        radius: (z.radiusKm || 5) * 1000,
-                        color: z.color || '#eab308',
-                        fillColor: z.color || '#eab308',
-                        fillOpacity: 0.18,
-                        weight: 1.5,
-                        dashArray: '4,4'
+                // Draw Swirling Concentric Isobaric Cyclone Rings around Eye
+                const cycloneRings = [
+                    { radiusKm: 18, color: '#22c55e', opacity: 0.12, label: 'Outer Wind Field' },
+                    { radiusKm: 12, color: '#eab308', opacity: 0.18, label: 'Tropical Storm Band' },
+                    { radiusKm: 7,  color: '#ef4444', opacity: 0.25, label: 'Eyewall Severe AQI' },
+                    { radiusKm: 3,  color: '#a855f7', opacity: 0.35, label: 'Cyclone Eye Core' }
+                ];
+
+                cycloneRings.forEach(ring => {
+                    const circle = L.circle([centerLat, centerLon], {
+                        radius: ring.radiusKm * 1000,
+                        color: ring.color,
+                        fillColor: ring.color,
+                        fillOpacity: ring.opacity,
+                        weight: 2,
+                        dashArray: '8,6'
                     }).addTo(map);
                     zoneCircles.push(circle);
                 });
@@ -1630,7 +1674,7 @@
                         const lat = parseFloat(this.dataset.lat);
                         const lon = parseFloat(this.dataset.lon);
                         const name = this.dataset.name;
-                        map.setView([lat, lon], 13);
+                        map.setView([lat, lon], 12);
                         fetchAqiPrediction(lat, lon, name);
                     });
                 });
@@ -1696,7 +1740,7 @@
             setupAutocomplete('inputStartPoint', 'autocompleteStartDropdown', (lat, lon, name) => {
                 startCoords = [lat, lon];
                 fetchAqiPrediction(lat, lon, name);
-                map.setView([lat, lon], 13);
+                map.setView([lat, lon], 12);
             });
 
             setupAutocomplete('inputDestination', 'autocompleteDestDropdown', (lat, lon) => {
@@ -1765,7 +1809,7 @@
                         const lon = pos.coords.longitude;
                         startCoords = [lat, lon];
                         document.getElementById('inputStartPoint').value = "My Location";
-                        map.setView([lat, lon], 14);
+                        map.setView([lat, lon], 12);
                         fetchAqiPrediction(lat, lon, "My Location");
                     }, () => {
                         alert('Could not access current location. Please check browser permissions.');
@@ -1781,7 +1825,7 @@
                     const name = this.dataset.name;
                     document.getElementById('inputStartPoint').value = name;
                     startCoords = [lat, lon];
-                    map.setView([lat, lon], 13);
+                    map.setView([lat, lon], 12);
                     fetchAqiPrediction(lat, lon, name);
                 });
             });
@@ -1792,7 +1836,7 @@
                 document.getElementById('btnRegionDelhi').classList.add('active');
                 document.getElementById('btnRegionMaha').classList.remove('active');
                 document.getElementById('currentRegionBadge').innerText = 'Delhi-NCR';
-                map.setView([28.6139, 77.2090], 12);
+                map.setView([28.6139, 77.2090], 11);
                 reloadRegionData();
             });
 
@@ -1801,7 +1845,7 @@
                 document.getElementById('btnRegionMaha').classList.add('active');
                 document.getElementById('btnRegionDelhi').classList.remove('active');
                 document.getElementById('currentRegionBadge').innerText = 'Maharashtra';
-                map.setView([19.0760, 72.8777], 12);
+                map.setView([19.0760, 72.8777], 11);
                 reloadRegionData();
             });
 
@@ -1879,7 +1923,7 @@
             // Map Layer Toggles
             document.getElementById('toggleHeatmapBtn').addEventListener('click', function() {
                 heatmapVisible = !heatmapVisible;
-                this.innerHTML = heatmapVisible ? '<i class="fas fa-fire"></i> ML Heatmap ON' : '<i class="fas fa-fire"></i> ML Heatmap OFF';
+                this.innerHTML = heatmapVisible ? '<i class="fas fa-hurricane"></i> Cyclone Heatmap ON' : '<i class="fas fa-hurricane"></i> Cyclone Heatmap OFF';
                 renderHeatmap();
             });
 
