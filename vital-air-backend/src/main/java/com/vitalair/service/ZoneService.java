@@ -52,7 +52,7 @@ public class ZoneService {
 
         List<CityDataService.CityAqi> cityData = cityDataService.fetchAllCitiesData(resolvedKey);
         if (cityData.isEmpty()) {
-            return defaultZones(region);
+            return defaultZones(region, resolvedKey);
         }
 
         List<ZoneResponse> result = new ArrayList<>();
@@ -78,9 +78,9 @@ public class ZoneService {
         return result;
     }
 
-    private List<ZoneResponse> defaultZones(RegionProperties.Region region) {
+    private List<ZoneResponse> defaultZones(RegionProperties.Region region, String resolvedKey) {
         List<ZoneResponse> result = new ArrayList<>();
-        double[][] coords = "delhi".equalsIgnoreCase(region.getKey()) ? new double[][]{
+        double[][] coords = "delhi".equalsIgnoreCase(resolvedKey) ? new double[][]{
                 {28.6139, 77.2090}, {28.6508, 77.3152}, {28.6297, 77.2427},
                 {28.5665, 77.1767}, {28.5921, 77.0460}, {28.5355, 77.3910}
         } : new double[][]{
