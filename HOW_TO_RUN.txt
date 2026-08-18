@@ -1,0 +1,60 @@
+VITAL AIR - JAVA/SPRING BOOT EDITION
+HOW TO RUN
+=====================================
+
+OPTION 1: Docker Compose (recommended - includes Postgres, zero manual setup)
+-------------------------------------------------------------------------
+1. cd vital-air-backend
+2. cp .env.example .env
+3. Open .env and set VITALAIR_JWT_SECRET to any random string 32+ characters long.
+   (Third-party API keys are optional - leave blank to fall back to the free
+   Open-Meteo API automatically.)
+4. docker compose up --build
+5. Open http://localhost:8080 in your browser.
+
+OPTION 2: Run directly with Maven (uses in-memory H2 database, no Docker needed)
+-------------------------------------------------------------------------
+1. cd vital-air-backend
+2. export VITALAIR_JWT_SECRET="a-random-string-at-least-32-characters-long"
+   (Windows PowerShell: $env:VITALAIR_JWT_SECRET="...")
+3. mvn spring-boot:run
+4. Open http://localhost:8080 in your browser.
+
+Data resets every restart in this mode (H2 is in-memory) - fine for trying
+things out, not for a real deployment.
+
+OPTION 3: Build a standalone jar
+-------------------------------------------------------------------------
+1. cd vital-air-backend
+2. mvn clean package
+3. java -jar target/vital-air-backend.jar
+   (set VITALAIR_JWT_SECRET and DB_* env vars first, same as above)
+
+WHERE THINGS LIVE
+-------------------------------------------------------------------------
+- Backend source:        vital-air-backend/src/main/java/com/vitalair/
+- Config (region/city
+  data, DB, ports):       vital-air-backend/src/main/resources/application.yml
+- Bundled frontend:       vital-air-backend/src/main/resources/static/index.html
+- Standalone frontend
+  (for split deploys):    frontend/index.html
+- Full architecture notes, deployment guide (Render/Railway/Vercel/Netlify),
+  and API reference:      README.md
+
+DEPLOYING
+-------------------------------------------------------------------------
+Backend -> Render or Railway: config files (render.yaml, railway.json,
+Dockerfile) are already in vital-air-backend/. Just connect the repo.
+
+Frontend -> only needed if deploying separately from the backend. See
+"Split deployment" in README.md.
+
+TROUBLESHOOTING
+-------------------------------------------------------------------------
+- "vitalair.jwt.secret is not set" on startup -> you forgot to set
+  VITALAIR_JWT_SECRET. See Option 1 step 3 or Option 2 step 2 above.
+- Predictions/heatmap look sparse or generic -> you haven't set any
+  third-party API keys, so everything is falling back to Open-Meteo (no key
+  needed) or, if that's also unreachable, each city's static base AQI. This
+  is expected behavior, not a bug - add OPENWEATHER_API_KEY etc. in .env for
+  richer live data.

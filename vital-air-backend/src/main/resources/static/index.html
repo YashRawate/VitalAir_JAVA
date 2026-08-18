@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vital Air · Hyper-Local Air Quality Intelligence</title>
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Leaflet Routing Machine -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Leaflet JS & Plugins -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #0b0e14;
+            --panel-bg: #141923;
+            --card-bg: #1a202c;
+            --card-inner: #222938;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-highlight: rgba(39, 201, 142, 0.3);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent-mint: #27c98e;
+            --accent-mint-hover: #22b57e;
+            --accent-mint-subtle: rgba(39, 201, 142, 0.15);
+            --accent-amber: #eab308;
+            --accent-amber-subtle: rgba(234, 179, 8, 0.2);
+            --accent-peach: #f59e0b;
+            --accent-peach-subtle: rgba(245, 158, 11, 0.25);
+            --accent-red: #ef4444;
+            --accent-violet: #a855f7;
+            --badge-moderate-bg: #facc15;
+            --badge-moderate-text: #000000;
+            --shadow-glow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+            --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        body.light-mode {
+            --bg-dark: #f0f4f8;
+            --panel-bg: #ffffff;
+            --card-bg: #f8fafc;
+            --card-inner: #edf2f7;
+            --border-color: rgba(0, 0, 0, 0.08);
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* HEADER NAVBAR */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 100;
+            height: 64px;
+        }
+
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        .brand-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(39, 201, 142, 0.2);
+            border: 1.5px solid var(--accent-mint);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-mint);
+            font-size: 14px;
+        }
+
+        .region-badge {
+            background: var(--accent-peach-subtle);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.4);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .nav-tabs-center {
+            display: flex;
+            align-items: center;
+            background: #0f141d;
+            padding: 4px;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        .nav-tab-btn {
+            padding: 8px 18px;
+            border-radius: 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-tab-btn.active {
+            background: #1e2736;
+            color: var(--accent-mint);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-tab-btn:hover:not(.active) {
+            color: var(--text-primary);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #1a212d;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .icon-btn:hover {
+            color: var(--text-primary);
+            border-color: rgba(255, 255, 255, 0.2);
+            background: #232d3e;
+        }
+
+        .theme-toggle-pill {
+            display: flex;
+            align-items: center;
+            background: #161c27;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 3px;
+            gap: 4px;
+        }
+
+        .theme-icon-option {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.2s ease;
+        }
+
+        .theme-icon-option.active {
+            background: var(--accent-mint-subtle);
+            color: var(--accent-mint);
+        }
+
+        /* MAIN DASHBOARD LAYOUT */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 310px 1fr 340px;
+            gap: 16px;
+            padding: 16px;
+            flex: 1;
+            height: calc(100vh - 64px);
+            overflow: hidden;
+            position: relative;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-container {
+                grid-template-columns: 280px 1fr 300px;
+                gap: 12px;
+                padding: 12px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+                height: auto;
+                overflow: visible;
+            }
+        }
+
+        /* CARD PANELS */
+        .panel-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+            max-height: 100%;
+        }
+
+        .panel-card::-webkit-scrollbar {
+            width: 6px;
+        }
+        .panel-card::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-primary);
+        }
+
+        .panel-title i {
+            color: var(--accent-mint);
+        }
+
+        /* LEFT SIDEBAR - CONTROLS */
+        .sub-tab-switcher {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: #0f141d;
+            padding: 4px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .sub-tab-btn {
+            padding: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .sub-tab-btn.active {
+            background: var(--card-bg);
+            color: var(--text-primary);
+        }
+
+        .section-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pill-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .pill-btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pill-btn.active {
+            background: var(--accent-peach-subtle);
+            color: #fbbf24;
+            border-color: rgba(251, 191, 36, 0.5);
+        }
+
+        .btn-use-location {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1.5px solid var(--accent-mint);
+            background: rgba(39, 201, 142, 0.08);
+            color: var(--accent-mint);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-use-location:hover {
+            background: rgba(39, 201, 142, 0.18);
+        }
+
+        .input-box-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+
+        .input-field-group {
+            position: relative;
+        }
+
+        .input-field-group i.prefix-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .input-field-group input {
+            width: 100%;
+            padding: 10px 12px 10px 36px;
+            background: #0f141d;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .input-field-group input:focus {
+            border-color: var(--accent-mint);
+        }
+
+        .swap-icon-btn {
+            position: absolute;
+            right: 12px;
+            top: 14px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* AUTOCOMPLETE DROPDOWN */
+        .autocomplete-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #141923;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            margin-top: 4px;
+            max-height: 180px;
+            overflow-y: auto;
+            z-index: 50;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            display: none;
+        }
+
+        .autocomplete-item {
+            padding: 8px 12px;
+            font-size: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .autocomplete-item:hover {
+            background: rgba(39, 201, 142, 0.15);
+            color: var(--accent-mint);
+        }
+
+        .shortcut-chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .chip-tag {
+            padding: 4px 10px;
+            border-radius: 16px;
+            background: #1a2230;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .chip-tag:hover {
+            border-color: var(--accent-mint);
+            color: var(--accent-mint);
+        }
+
+        .ml-info-card {
+            background: rgba(16, 36, 27, 0.7);
+            border: 1px solid rgba(39, 201, 142, 0.25);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .ml-info-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-mint);
+        }
+
+        .ml-info-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+        }
+
+        .ml-info-label {
+            color: var(--text-secondary);
+        }
+
+        .ml-info-val {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-family: var(--font-mono);
+        }
+
+        .btn-find-route {
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            background: var(--accent-mint);
+            color: #051911;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 16px rgba(39, 201, 142, 0.3);
+        }
+
+        .btn-find-route:hover {
+            background: var(--accent-mint-hover);
+            transform: translateY(-1px);
+        }
+
+        /* ROUTE RESULTS CARD OVERLAY */
+        .route-results-card {
+            background: #141a24;
+            border: 1.5px solid var(--accent-mint);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .route-res-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+        }
+
+        /* SIMULATOR PANEL CONTROLS */
+        .simulator-panel-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .sim-btn-start {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: none;
+            background: var(--accent-amber);
+            color: #000;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        /* MIDDLE PANEL - MAP VIEW (Matches Mockup Image) */
+        .map-panel-container {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            background: #f4f1ea;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Floating Top Overlay on Map */
+        .map-top-bar {
+            position: absolute;
+            top: 14px;
+            left: 14px;
+            right: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .map-top-bar > * {
+            pointer-events: auto;
+        }
+
+        .confidence-badge {
+            background: rgba(15, 20, 29, 0.85);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #f3f4f6;
+        }
+
+        .processor-badge {
+            background: #f59e0b;
+            color: #000000;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+        }
+
+        .timeline-pill-selector {
+            display: flex;
+            align-items: center;
+            background: rgba(15, 20, 29, 0.9);
+            backdrop-filter: blur(8px);
+            padding: 4px;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            gap: 2px;
+        }
+
+        .timeline-btn {
+            padding: 5px 12px;
+            border-radius: 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .timeline-btn.active {
+            background: var(--accent-mint);
+            color: #051911;
+        }
+
+        /* Floating Bottom Controls on Map */
+        .map-bottom-controls {
+            position: absolute;
+            bottom: 44px;
+            right: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .map-toggle-btn {
+            background: #f59e0b;
+            color: #000000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+        }
+
+        .map-toggle-btn:hover {
+            background: #d97706;
+        }
+
+        .map-legend-card {
+            position: absolute;
+            bottom: 44px;
+            left: 14px;
+            background: rgba(15, 20, 29, 0.92);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            z-index: 10;
+            font-size: 11px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.green { background: #22c55e; }
+        .legend-dot.yellow { background: #eab308; }
+        .legend-dot.red { background: #ef4444; }
+        .legend-dot.violet { background: #a855f7; }
+
+        .wind-alert-banner {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 20, 29, 0.95);
+            border-top: 1px solid var(--border-color);
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fbbf24;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        /* RIGHT SIDEBAR - LIVE DATA */
+        .header-status-pill {
+            margin-left: auto;
+            background: rgba(39, 201, 142, 0.15);
+            color: var(--accent-mint);
+            border: 1px solid rgba(39, 201, 142, 0.3);
+            padding: 3px 10px;
+            border-radius: 16px;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .live-aqi-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .live-aqi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .live-aqi-main {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+        }
+
+        .aqi-number {
+            font-size: 52px;
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 1;
+            color: #ffffff;
+        }
+
+        .aqi-category-badge {
+            background: var(--badge-moderate-bg);
+            color: var(--badge-moderate-text);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .location-meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-color);
+            font-size: 12px;
+        }
+
+        .meta-label {
+            color: var(--text-secondary);
+        }
+
+        .meta-value {
+            color: var(--text-primary);
+            font-weight: 700;
+            text-align: right;
+        }
+
+        /* Pollutant Breakdown */
+        .pollutants-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pollutant-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .pollutant-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+
+        .pollutant-name {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .pollutant-val {
+            color: var(--text-primary);
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: #0f141d;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        /* Forecast Chart Bar */
+        .forecast-horizontal-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .forecast-bar-row {
+            display: grid;
+            grid-template-columns: 42px 1fr 36px;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .forecast-time {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .forecast-bar-track {
+            height: 14px;
+            background: #0f141d;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .forecast-bar-value {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        .forecast-num {
+            color: var(--text-primary);
+            font-weight: 700;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            text-align: right;
+        }
+
+        /* Hotspots List */
+        .hotspot-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .hotspot-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .hotspot-item:hover {
+            border-color: var(--accent-mint);
+            transform: translateX(2px);
+        }
+
+        .hotspot-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .hotspot-val {
+            font-weight: 800;
+            font-family: var(--font-mono);
+            color: var(--accent-amber);
+        }
+
+        /* White Popup Card matching Mockup Image */
+        .leaflet-popup-content-wrapper {
+            background: #ffffff !important;
+            color: #0f172a !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 12px !important;
+            padding: 4px !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25) !important;
+        }
+        .leaflet-popup-tip {
+            background: #ffffff !important;
+        }
+        .custom-popup-box {
+            font-size: 12px;
+            padding: 4px 8px;
+        }
+        .custom-popup-title {
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .custom-popup-aqi {
+            font-weight: 600;
+            color: #475569;
+        }
+
+        /* DEEP INSIGHTS MODAL */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .health-advisory-box {
+            background: rgba(39, 201, 142, 0.1);
+            border: 1px solid var(--accent-mint);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .sources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .source-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP NAVBAR -->
+    <header class="navbar">
+        <div class="brand-section">
+            <div class="brand-logo" id="brandLogoBtn">
+                <div class="brand-icon"><i class="fas fa-leaf"></i></div>
+                <span>Vital Air</span>
+            </div>
+            <span class="region-badge" id="currentRegionBadge">Delhi-NCR</span>
+        </div>
+
+        <nav class="nav-tabs-center">
+            <button class="nav-tab-btn active" id="tabLiveMap"><i class="fas fa-map-marked-alt"></i> Live Map</button>
+            <button class="nav-tab-btn" id="tabDeepInsights"><i class="fas fa-chart-pie"></i> Deep Insights</button>
+        </nav>
+
+        <div class="header-actions">
+            <button class="icon-btn" id="btnSettings" title="Settings"><i class="fas fa-cog"></i></button>
+            <div class="theme-toggle-pill">
+                <div class="theme-icon-option" id="btnLightMode" title="Light Mode"><i class="fas fa-sun"></i></div>
+                <div class="theme-icon-option active" id="btnDarkMode" title="Dark Mode"><i class="fas fa-moon"></i></div>
+            </div>
+            <button class="icon-btn" id="btnProfile" title="User Profile"><i class="fas fa-user-circle"></i></button>
+        </div>
+    </header>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="dashboard-container">
+
+        <!-- LEFT COLUMN - CONTROLS PANEL -->
+        <aside class="panel-card">
+            <div class="panel-title">
+                <i class="fas fa-sliders-h"></i> Controls
+            </div>
+
+            <div class="sub-tab-switcher">
+                <button class="sub-tab-btn active" id="subTabJourney"><i class="fas fa-route"></i> Journey</button>
+                <button class="sub-tab-btn" id="subTabSimulator"><i class="fas fa-car"></i> Simulator</button>
+            </div>
+
+            <!-- JOURNEY SECTION CONTROLS -->
+            <div id="journeyControlsSection" style="display: flex; flex-direction: column; gap: 14px;">
+                <div class="section-label">Plan Your Journey</div>
+
+                <div class="pill-group">
+                    <button class="pill-btn active" data-region="delhi_ncr" id="btnRegionDelhi">Delhi-NCR</button>
+                    <button class="pill-btn" data-region="maharashtra" id="btnRegionMaha">Maharashtra</button>
+                </div>
+
+                <button class="btn-use-location" id="btnUseCurrentLocation">
+                    <i class="fas fa-crosshairs"></i> Use Current Location
+                </button>
+
+                <div class="input-box-wrapper">
+                    <div class="input-field-group">
+                        <i class="fas fa-circle prefix-icon" style="font-size: 8px; color: var(--accent-mint);"></i>
+                        <input type="text" id="inputStartPoint" placeholder="Starting point..." value="New Delhi" autocomplete="off">
+                        <i class="fas fa-exchange-alt swap-icon-btn" id="btnSwapLocations" title="Swap locations"></i>
+                        <div class="autocomplete-dropdown" id="autocompleteStartDropdown"></div>
+                    </div>
+                    <div class="input-field-group">
+                        <i class="fas fa-map-marker-alt prefix-icon" style="color: var(--accent-red);"></i>
+                        <input type="text" id="inputDestination" placeholder="Destination..." autocomplete="off">
+                        <div class="autocomplete-dropdown" id="autocompleteDestDropdown"></div>
+                    </div>
+                </div>
+
+                <div class="shortcut-chips">
+                    <span class="chip-tag" data-lat="28.6139" data-lon="77.2090" data-name="New Delhi">New Delhi</span>
+                    <span class="chip-tag" data-lat="28.6508" data-lon="77.3152" data-name="Anand Vihar">Anand Vihar</span>
+                    <span class="chip-tag" data-lat="28.6297" data-lon="77.2427" data-name="ITO">ITO</span>
+                    <span class="chip-tag" data-lat="28.5665" data-lon="77.1767" data-name="RK Puram">RK Puram</span>
+                    <span class="chip-tag" data-lat="28.5921" data-lon="77.0460" data-name="Dwarka">Dwarka</span>
+                </div>
+
+                <!-- ROUTE COMPARISON RESULT CARD (Shown after route calculation) -->
+                <div class="route-results-card" id="routeResultsCard" style="display: none;">
+                    <div style="font-weight: 800; color: var(--accent-mint); font-size: 12px;"><i class="fas fa-route"></i> Route Optimization Results</div>
+                    <div class="route-res-row">
+                        <span style="color: var(--text-secondary);">Safe Route:</span>
+                        <span style="font-weight: 700; color: var(--accent-mint);" id="resSafeDist">0 km (Avg AQI 120)</span>
+                    </div>
+                    <div class="route-res-row">
+                        <span style="color: var(--text-secondary);">Direct Route:</span>
+                        <span style="font-weight: 700; color: var(--accent-red);" id="resDirectDist">0 km (Avg AQI 180)</span>
+                    </div>
+                    <div class="route-res-row">
+                        <span style="color: var(--text-secondary);">Exposure Reduction:</span>
+                        <span style="font-weight: 800; color: var(--accent-mint);" id="resExposurePct">-33%</span>
+                    </div>
+                </div>
+
+                <div class="ml-info-card">
+                    <div class="ml-info-header">
+                        <i class="fas fa-brain"></i> ML Route Optimization
+                    </div>
+                    <div class="ml-info-row">
+                        <span class="ml-info-label">Interpolation:</span>
+                        <span class="ml-info-val">IDW + RBF + Kriging</span>
+                    </div>
+                    <div class="ml-info-row">
+                        <span class="ml-info-label">Grid Resolution:</span>
+                        <span class="ml-info-val">20m</span>
+                    </div>
+                    <div class="ml-info-row">
+                        <span class="ml-info-label">Data Sources:</span>
+                        <span class="ml-info-val">Sensors, Fires, Traffic</span>
+                    </div>
+                </div>
+
+                <button class="btn-find-route" id="btnFindRoute">
+                    <i class="fas fa-shield-alt"></i> Find ML-Optimized Safe Route
+                </button>
+            </div>
+
+            <!-- SIMULATOR SECTION CONTROLS (Hidden by default) -->
+            <div id="simulatorControlsSection" style="display: none; flex-direction: column; gap: 14px;">
+                <div class="section-label">Vehicle Journey Simulator</div>
+                <p style="font-size: 12px; color: var(--text-secondary);">Simulate a trip between origin and destination to monitor real-time exposure variations.</p>
+                <button class="sim-btn-start" id="btnStartSimulation"><i class="fas fa-play"></i> Start Driving Simulation</button>
+                <button class="pill-btn" id="btnStopSimulation" style="display: none; width: 100%;"><i class="fas fa-stop"></i> Stop Simulation</button>
+            </div>
+        </aside>
+
+        <!-- CENTER COLUMN - MAP PANEL -->
+        <section class="map-panel-container">
+            <div class="map-top-bar">
+                <div class="confidence-badge" id="confidenceBadge">Current: 95% Confidence</div>
+                <div class="processor-badge"><i class="fas fa-fire-alt"></i> ML Processor Active · Dynamic Heatmap</div>
+                <div class="timeline-pill-selector">
+                    <button class="timeline-btn active" data-hours="0">NOW</button>
+                    <button class="timeline-btn" data-hours="3">+3h</button>
+                    <button class="timeline-btn" data-hours="6">+6h</button>
+                    <button class="timeline-btn" data-hours="12">+12h</button>
+                    <button class="timeline-btn" data-hours="24">+24h</button>
+                </div>
+            </div>
+
+            <div id="map"></div>
+
+            <div class="map-bottom-controls">
+                <button class="map-toggle-btn" id="toggleHeatmapBtn"><i class="fas fa-fire"></i> ML Heatmap ON</button>
+                <button class="map-toggle-btn" id="toggleZonesBtn"><i class="fas fa-globe"></i> Zones ON</button>
+            </div>
+
+            <div class="map-legend-card">
+                <div class="legend-item"><div class="legend-dot green"></div> Green (0-120)</div>
+                <div class="legend-item"><div class="legend-dot yellow"></div> Yellow (120-200)</div>
+                <div class="legend-item"><div class="legend-dot red"></div> Red (200-250)</div>
+                <div class="legend-item"><div class="legend-dot violet"></div> Violet (250+)</div>
+            </div>
+
+            <div class="wind-alert-banner">
+                <i class="fas fa-exclamation-triangle"></i>
+                <i class="fas fa-wind"></i>
+                <span id="windAlertText">Wind from W - Pollution moving East</span>
+            </div>
+        </section>
+
+        <!-- RIGHT COLUMN - LIVE DATA & INSIGHTS -->
+        <aside class="panel-card">
+            <div class="panel-title">
+                <i class="fas fa-chart-bar"></i> Live Data
+                <div class="header-status-pill" id="backendStatusPill">
+                    <i class="fas fa-circle" style="font-size: 6px;"></i> Backend: Connected
+                </div>
+            </div>
+
+            <div class="live-aqi-card">
+                <div class="live-aqi-header">
+                    <span class="section-label"><i class="fas fa-dot-circle" style="color: var(--accent-mint);"></i> Live AQI</span>
+                </div>
+                <div class="live-aqi-main">
+                    <div class="aqi-number" id="displayAqiVal">161</div>
+                    <span class="aqi-category-badge" id="displayAqiCategory">Moderate</span>
+                </div>
+                <div class="location-meta-grid">
+                    <span class="meta-label">Location:</span>
+                    <span class="meta-value" id="displayLocationName">New Delhi</span>
+                    <span class="meta-label">Zone:</span>
+                    <span class="meta-value" id="displayZoneName">Moderate</span>
+                </div>
+            </div>
+
+            <div class="section-label"><i class="fas fa-lungs"></i> Pollutant Breakdown</div>
+            <div class="pollutants-list">
+                <div class="pollutant-row">
+                    <div class="pollutant-info">
+                        <span class="pollutant-name">PM2.5</span>
+                        <span class="pollutant-val" id="valPm25">75 µg</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="barPm25" style="width: 65%; background: var(--accent-red);"></div>
+                    </div>
+                </div>
+                <div class="pollutant-row">
+                    <div class="pollutant-info">
+                        <span class="pollutant-name">PM10</span>
+                        <span class="pollutant-val" id="valPm10">143 µg</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="barPm10" style="width: 55%; background: var(--accent-amber);"></div>
+                    </div>
+                </div>
+                <div class="pollutant-row">
+                    <div class="pollutant-info">
+                        <span class="pollutant-name">NO₂</span>
+                        <span class="pollutant-val" id="valNo2">81 µg</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="barNo2" style="width: 45%; background: var(--accent-amber);"></div>
+                    </div>
+                </div>
+                <div class="pollutant-row">
+                    <div class="pollutant-info">
+                        <span class="pollutant-name">CO</span>
+                        <span class="pollutant-val" id="valCo">0.9 ppm</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="barCo" style="width: 25%; background: var(--accent-mint);"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-label"><i class="fas fa-chart-line"></i> 24-Hour ML Forecast</div>
+            <div class="forecast-horizontal-bars" id="forecastBarsContainer">
+                <!-- Dynamically populated -->
+            </div>
+
+            <div class="section-label"><i class="fas fa-fire-alt"></i> Hotspots</div>
+            <div class="hotspot-list" id="hotspotsContainer">
+                <!-- Dynamically populated -->
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- DEEP INSIGHTS MODAL -->
+    <div class="modal-overlay" id="deepInsightsModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="panel-title"><i class="fas fa-chart-pie"></i> Air Quality Deep Insights</div>
+                <button class="modal-close-btn" id="btnCloseInsightsModal">&times;</button>
+            </div>
+
+            <div class="health-advisory-box" id="modalHealthBox">
+                <i class="fas fa-shield-virus" style="font-size: 32px; color: var(--accent-mint);"></i>
+                <div>
+                    <strong style="color: var(--accent-mint); font-size: 14px;">Health Recommendation</strong>
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;" id="modalHealthAdviceText">Air quality is Moderate. Sensitive individuals should consider reducing prolonged outdoor exertion.</p>
+                </div>
+            </div>
+
+            <div class="section-label"><i class="fas fa-industry"></i> Regional Pollution Sources Breakdown</div>
+            <div class="sources-grid" id="modalSourcesGrid">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- FRONTEND APPLICATION JAVASCRIPT -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Base state
+            let currentLat = 28.6139;
+            let currentLon = 77.2090;
+            let currentLocationName = "New Delhi";
+            let currentRegion = "delhi_ncr";
+            let activeHoursOffset = 0;
+
+            let startCoords = [28.6139, 77.2090];
+            let destCoords = null;
+
+            // Layers & Map instances
+            let map = null;
+            let voyagerTileLayer = null;
+            let darkTileLayer = null;
+
+            let heatLayer = null;
+            let heatmapVisible = true;
+            let zonesVisible = true;
+            let zoneCircles = [];
+            let sensorMarkers = [];
+            let popupMarker = null;
+            let directPolyline = null;
+            let safePolyline = null;
+            let simulatorMarker = null;
+            let simulatorInterval = null;
+
+            // Color helper
+            function getAqiColor(aqi) {
+                if (aqi <= 120) return '#22c55e';
+                if (aqi <= 200) return '#eab308';
+                if (aqi <= 250) return '#ef4444';
+                return '#a855f7';
+            }
+
+            function getAqiCategory(aqi) {
+                if (aqi <= 50) return 'Good';
+                if (aqi <= 100) return 'Satisfactory';
+                if (aqi <= 200) return 'Moderate';
+                if (aqi <= 300) return 'Poor';
+                if (aqi <= 400) return 'Very Poor';
+                return 'Severe';
+            }
+
+            // Initialize Leaflet Map (Using Voyager Warm Vintage Map Tile matching the user mockup)
+            map = L.map('map', { zoomControl: false }).setView([currentLat, currentLon], 12);
+            L.control.zoom({ position: 'topleft' }).addTo(map);
+
+            voyagerTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap &copy; CartoDB'
+            });
+
+            darkTileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19,
+                attribution: '&copy; OpenStreetMap &copy; CartoDB'
+            });
+
+            voyagerTileLayer.addTo(map);
+
+            // Open Mockup Style Location Popup Marker on Map
+            function showMainLocationPopup(lat, lon, name, aqi) {
+                if (popupMarker) map.removeLayer(popupMarker);
+                const popupContent = `
+                    <div class="custom-popup-box">
+                        <div class="custom-popup-title"><i class="fas fa-map-marker-alt" style="color: var(--accent-red);"></i> ${name}</div>
+                        <div class="custom-popup-aqi">AQI: ${aqi} (${getAqiCategory(aqi)})</div>
+                    </div>
+                `;
+                popupMarker = L.popup()
+                    .setLatLng([lat, lon])
+                    .setContent(popupContent)
+                    .openOn(map);
+            }
+
+            // Fetch AQI Prediction from Backend
+            async function fetchAqiPrediction(lat, lon, name) {
+                try {
+                    const res = await fetch(`/api/predict/${lat}/${lon}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        updateLiveAqiUI(data, name || currentLocationName);
+                    }
+                } catch (e) {
+                    console.log('Prediction API error, fallback:', e);
+                }
+            }
+
+            function updateLiveAqiUI(data, name) {
+                currentLat = data.lat || currentLat;
+                currentLon = data.lon || currentLon;
+                if (name) currentLocationName = name;
+
+                const aqi = data.aqi || 161;
+                const category = data.category || getAqiCategory(aqi);
+
+                document.getElementById('displayAqiVal').innerText = aqi;
+                const catBadge = document.getElementById('displayAqiCategory');
+                catBadge.innerText = category;
+                catBadge.style.background = data.color || getAqiColor(aqi);
+                catBadge.style.color = (aqi > 120 && aqi <= 250) ? '#000' : '#fff';
+
+                document.getElementById('displayLocationName').innerText = currentLocationName;
+                document.getElementById('displayZoneName').innerText = category;
+
+                // Update Pollutant Bars
+                const pm25 = data.pm25 !== null && data.pm25 !== undefined ? data.pm25 : 75;
+                const pm10 = data.pm10 !== null && data.pm10 !== undefined ? data.pm10 : 143;
+                const no2 = data.no2 !== null && data.no2 !== undefined ? data.no2 : 81;
+                const co = data.co !== null && data.co !== undefined ? data.co : 0.9;
+
+                document.getElementById('valPm25').innerText = `${pm25} µg`;
+                document.getElementById('barPm25').style.width = `${Math.min(100, (pm25 / 150) * 100)}%`;
+
+                document.getElementById('valPm10').innerText = `${pm10} µg`;
+                document.getElementById('barPm10').style.width = `${Math.min(100, (pm10 / 250) * 100)}%`;
+
+                document.getElementById('valNo2').innerText = `${no2} µg`;
+                document.getElementById('barNo2').style.width = `${Math.min(100, (no2 / 120) * 100)}%`;
+
+                document.getElementById('valCo').innerText = `${co} ppm`;
+                document.getElementById('barCo').style.width = `${Math.min(100, (co / 4) * 100)}%`;
+
+                // Show Map Popup Marker
+                showMainLocationPopup(currentLat, currentLon, currentLocationName, aqi);
+
+                // Load 24-Hour Forecast for location
+                fetchForecastData(currentLat, currentLon);
+            }
+
+            // Fetch 24-Hour Forecast
+            async function fetchForecastData(lat, lon) {
+                try {
+                    const res = await fetch(`/api/forecast?lat=${lat}&lon=${lon}&hours=24`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        renderForecastBars(data.points || []);
+                    }
+                } catch (e) {
+                    console.log('Forecast API fallback');
+                }
+            }
+
+            function renderForecastBars(points) {
+                const container = document.getElementById('forecastBarsContainer');
+                if (!container) return;
+
+                if (!points || points.length === 0) {
+                    points = [
+                        { hourOfDay: 0, aqi: 183 },
+                        { hourOfDay: 3, aqi: 148 },
+                        { hourOfDay: 6, aqi: 134 },
+                        { hourOfDay: 9, aqi: 146 },
+                        { hourOfDay: 12, aqi: 211 },
+                        { hourOfDay: 15, aqi: 189 },
+                        { hourOfDay: 18, aqi: 174 }
+                    ];
+                }
+
+                const maxAqi = Math.max(...points.map(p => p.aqi), 250);
+                container.innerHTML = points.slice(0, 7).map((p, idx) => {
+                    const label = idx === 0 ? 'Now' : `${p.hourOfDay || idx*3}h`;
+                    const pct = Math.min(100, (p.aqi / maxAqi) * 100);
+                    const color = p.color || getAqiColor(p.aqi);
+                    return `
+                        <div class="forecast-bar-row">
+                            <span class="forecast-time">${label}</span>
+                            <div class="forecast-bar-track">
+                                <div class="forecast-bar-value" style="width: ${pct}%; background: ${color};"></div>
+                            </div>
+                            <span class="forecast-num">${p.aqi}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Fetch Heatmap Points with Vibrant Smooth Radial Design
+            async function fetchHeatmapData() {
+                try {
+                    const res = await fetch(`/api/heatmap?region=${currentRegion}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        renderHeatmap(data.points || []);
+                    }
+                } catch (e) {
+                    console.log('Heatmap API fallback');
+                    renderHeatmap([]);
+                }
+            }
+
+            function renderHeatmap(points) {
+                if (heatLayer) map.removeLayer(heatLayer);
+                if (!heatmapVisible) return;
+
+                let heatPoints = [];
+                if (points && points.length > 0) {
+                    heatPoints = points.map(p => [p.lat, p.lon, p.intensity || (p.aqi / 300)]);
+                } else {
+                    const center = currentRegion === 'maharashtra' ? [19.0760, 72.8777] : [28.6139, 77.2090];
+                    heatPoints = [
+                        [center[0], center[1], 0.85],
+                        [center[0] + 0.02, center[1] + 0.03, 0.95],
+                        [center[0] - 0.02, center[1] + 0.02, 0.75],
+                        [center[0] + 0.01, center[1] - 0.03, 0.8],
+                        [center[0] - 0.03, center[1] - 0.02, 0.65]
+                    ];
+                }
+
+                heatLayer = L.heatLayer(heatPoints, {
+                    radius: 65,
+                    blur: 35,
+                    maxZoom: 15,
+                    minOpacity: 0.35,
+                    gradient: {
+                        0.2: '#22c55e',
+                        0.5: '#eab308',
+                        0.75: '#ef4444',
+                        1.0: '#a855f7'
+                    }
+                }).addTo(map);
+            }
+
+            // Concentric Severity Zones (Multi-ring Heatmap effect matching mockup)
+            async function fetchZonesData() {
+                try {
+                    const res = await fetch(`/api/zones?region=${currentRegion}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        renderZones(data);
+                    }
+                } catch (e) {
+                    console.log('Zones API fallback');
+                    renderZones([]);
+                }
+            }
+
+            function renderZones(zones) {
+                zoneCircles.forEach(c => map.removeLayer(c));
+                zoneCircles = [];
+
+                if (!zonesVisible) return;
+
+                if (!zones || zones.length === 0) {
+                    const center = currentRegion === 'maharashtra' ? [19.0760, 72.8777] : [28.6139, 77.2090];
+                    zones = [
+                        { centerLat: center[0], centerLon: center[1], radiusKm: 12, color: '#ef4444' },
+                        { centerLat: center[0], centerLon: center[1], radiusKm: 8, color: '#f59e0b' },
+                        { centerLat: center[0], centerLon: center[1], radiusKm: 4, color: '#eab308' },
+                        { centerLat: center[0], centerLon: center[1], radiusKm: 2, color: '#22c55e' }
+                    ];
+                }
+
+                zones.forEach(z => {
+                    const circle = L.circle([z.centerLat, z.centerLon], {
+                        radius: (z.radiusKm || 5) * 1000,
+                        color: z.color || '#eab308',
+                        fillColor: z.color || '#eab308',
+                        fillOpacity: 0.18,
+                        weight: 1.5,
+                        dashArray: '4,4'
+                    }).addTo(map);
+                    zoneCircles.push(circle);
+                });
+            }
+
+            // Fetch Live Sensors
+            async function fetchSensorsData() {
+                try {
+                    const res = await fetch(`/api/sensors?region=${currentRegion}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        renderSensors(data);
+                    }
+                } catch (e) {
+                    console.log('Sensors API fallback');
+                }
+            }
+
+            function renderSensors(sensors) {
+                sensorMarkers.forEach(m => map.removeLayer(m));
+                sensorMarkers = [];
+
+                if (!sensors || sensors.length === 0) {
+                    sensors = [
+                        { locationName: 'New Delhi', lat: 28.6139, lon: 77.2090, aqi: 161, category: 'Moderate', color: '#eab308' },
+                        { locationName: 'Anand Vihar', lat: 28.6508, lon: 77.3152, aqi: 160, category: 'Moderate', color: '#eab308' },
+                        { locationName: 'ITO', lat: 28.6297, lon: 77.2427, aqi: 165, category: 'Moderate', color: '#eab308' }
+                    ];
+                }
+
+                sensors.forEach(s => {
+                    const color = s.color || getAqiColor(s.aqi);
+                    const icon = L.divIcon({
+                        className: 'custom-pin-marker',
+                        html: `<div style="background: ${color}; color: #000; font-weight: 800; padding: 2px 7px; border-radius: 12px; font-size: 11px; border: 2px solid #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">${s.aqi}</div>`,
+                        iconSize: [36, 24]
+                    });
+                    const marker = L.marker([s.lat, s.lon], { icon }).addTo(map);
+                    marker.on('click', () => {
+                        fetchAqiPrediction(s.lat, s.lon, s.locationName);
+                    });
+                    sensorMarkers.push(marker);
+                });
+            }
+
+            // Fetch Regional Hotspots
+            async function fetchHotspotsData() {
+                try {
+                    const res = await fetch(`/api/hotspots?region=${currentRegion}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        renderHotspots(data);
+                    }
+                } catch (e) {
+                    console.log('Hotspots API fallback');
+                }
+            }
+
+            function renderHotspots(hotspots) {
+                const container = document.getElementById('hotspotsContainer');
+                if (!container) return;
+
+                if (!hotspots || hotspots.length === 0) {
+                    hotspots = [
+                        { name: 'New Delhi', lat: 28.6139, lon: 77.2090, aqi: 161 },
+                        { name: 'Anand Vihar', lat: 28.6508, lon: 77.3152, aqi: 161 },
+                        { name: 'ITO', lat: 28.6297, lon: 77.2427, aqi: 161 }
+                    ];
+                }
+
+                container.innerHTML = hotspots.slice(0, 4).map(h => `
+                    <div class="hotspot-item" data-lat="${h.lat}" data-lon="${h.lon}" data-name="${h.name}">
+                        <div class="hotspot-name"><i class="fas fa-map-marker-alt" style="color: var(--accent-mint);"></i> ${h.name}</div>
+                        <div class="hotspot-val">${h.aqi}</div>
+                    </div>
+                `).join('');
+
+                container.querySelectorAll('.hotspot-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const lat = parseFloat(this.dataset.lat);
+                        const lon = parseFloat(this.dataset.lon);
+                        const name = this.dataset.name;
+                        map.setView([lat, lon], 13);
+                        fetchAqiPrediction(lat, lon, name);
+                    });
+                });
+            }
+
+            // Autocomplete Location Search
+            function setupAutocomplete(inputId, dropdownId, onSelect) {
+                const input = document.getElementById(inputId);
+                const dropdown = document.getElementById(dropdownId);
+                let debounceTimer = null;
+
+                if (!input || !dropdown) return;
+
+                input.addEventListener('input', () => {
+                    clearTimeout(debounceTimer);
+                    const q = input.value.trim();
+                    if (q.length < 2) {
+                        dropdown.style.display = 'none';
+                        return;
+                    }
+
+                    debounceTimer = setTimeout(async () => {
+                        try {
+                            const res = await fetch(`/api/locations/search?query=${encodeURIComponent(q)}`);
+                            if (res.ok) {
+                                const results = await res.json();
+                                if (results && results.length > 0) {
+                                    dropdown.innerHTML = results.map(r => `
+                                        <div class="autocomplete-item" data-lat="${r.lat}" data-lon="${r.lon}" data-name="${r.name}">
+                                            <span><i class="fas fa-location-dot" style="color: var(--accent-mint);"></i> ${r.name}</span>
+                                            <span style="color: var(--text-muted); font-size: 10px;">${r.region || ''}</span>
+                                        </div>
+                                    `).join('');
+                                    dropdown.style.display = 'block';
+
+                                    dropdown.querySelectorAll('.autocomplete-item').forEach(item => {
+                                        item.addEventListener('click', function() {
+                                            const lat = parseFloat(this.dataset.lat);
+                                            const lon = parseFloat(this.dataset.lon);
+                                            const name = this.dataset.name;
+                                            input.value = name;
+                                            dropdown.style.display = 'none';
+                                            if (onSelect) onSelect(lat, lon, name);
+                                        });
+                                    });
+                                } else {
+                                    dropdown.style.display = 'none';
+                                }
+                            }
+                        } catch (e) {
+                            dropdown.style.display = 'none';
+                        }
+                    }, 250);
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                        dropdown.style.display = 'none';
+                    }
+                });
+            }
+
+            setupAutocomplete('inputStartPoint', 'autocompleteStartDropdown', (lat, lon, name) => {
+                startCoords = [lat, lon];
+                fetchAqiPrediction(lat, lon, name);
+                map.setView([lat, lon], 13);
+            });
+
+            setupAutocomplete('inputDestination', 'autocompleteDestDropdown', (lat, lon) => {
+                destCoords = [lat, lon];
+            });
+
+            // Calculate ML-Optimized Safe Route
+            document.getElementById('btnFindRoute').addEventListener('click', async () => {
+                if (!destCoords) {
+                    const destVal = document.getElementById('inputDestination').value.trim();
+                    if (!destVal) {
+                        alert('Please enter or select a Destination location!');
+                        return;
+                    }
+                    destCoords = [startCoords[0] + 0.05, startCoords[1] + 0.06];
+                }
+
+                try {
+                    const res = await fetch(`/api/route/safe?start_lat=${startCoords[0]}&start_lon=${startCoords[1]}&end_lat=${destCoords[0]}&end_lon=${destCoords[1]}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        renderRouteOverlay(data);
+                    }
+                } catch (e) {
+                    console.log('Route API fallback');
+                }
+            });
+
+            function renderRouteOverlay(routeData) {
+                if (directPolyline) map.removeLayer(directPolyline);
+                if (safePolyline) map.removeLayer(safePolyline);
+
+                const safePoints = routeData.safe?.waypoints || [startCoords, destCoords];
+                const directPoints = routeData.direct?.waypoints || [startCoords, destCoords];
+
+                // Direct Route (Red/Orange dashed)
+                directPolyline = L.polyline(directPoints, {
+                    color: '#ef4444',
+                    weight: 4,
+                    dashArray: '6,6',
+                    opacity: 0.85
+                }).addTo(map);
+
+                // Safe Route (Mint green solid with glow)
+                safePolyline = L.polyline(safePoints, {
+                    color: '#27c98e',
+                    weight: 6,
+                    opacity: 0.95
+                }).addTo(map);
+
+                map.fitBounds(safePolyline.getBounds(), { padding: [40, 40] });
+
+                // Show Results Card
+                const card = document.getElementById('routeResultsCard');
+                card.style.display = 'flex';
+                document.getElementById('resSafeDist').innerText = `${routeData.safe?.distanceKm || 12.4} km (Avg AQI ${routeData.safe?.avgAqi || 120})`;
+                document.getElementById('resDirectDist').innerText = `${routeData.direct?.distanceKm || 10.8} km (Avg AQI ${routeData.direct?.avgAqi || 180})`;
+                document.getElementById('resExposurePct').innerText = `-${routeData.exposureReductionPct || 33}%`;
+            }
+
+            // Use Current Location
+            document.getElementById('btnUseCurrentLocation').addEventListener('click', () => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition((pos) => {
+                        const lat = pos.coords.latitude;
+                        const lon = pos.coords.longitude;
+                        startCoords = [lat, lon];
+                        document.getElementById('inputStartPoint').value = "My Location";
+                        map.setView([lat, lon], 14);
+                        fetchAqiPrediction(lat, lon, "My Location");
+                    }, () => {
+                        alert('Could not access current location. Please check browser permissions.');
+                    });
+                }
+            });
+
+            // Shortcut Chips
+            document.querySelectorAll('.chip-tag').forEach(chip => {
+                chip.addEventListener('click', function() {
+                    const lat = parseFloat(this.dataset.lat);
+                    const lon = parseFloat(this.dataset.lon);
+                    const name = this.dataset.name;
+                    document.getElementById('inputStartPoint').value = name;
+                    startCoords = [lat, lon];
+                    map.setView([lat, lon], 13);
+                    fetchAqiPrediction(lat, lon, name);
+                });
+            });
+
+            // Region Switcher
+            document.getElementById('btnRegionDelhi').addEventListener('click', () => {
+                currentRegion = 'delhi_ncr';
+                document.getElementById('btnRegionDelhi').classList.add('active');
+                document.getElementById('btnRegionMaha').classList.remove('active');
+                document.getElementById('currentRegionBadge').innerText = 'Delhi-NCR';
+                map.setView([28.6139, 77.2090], 12);
+                reloadRegionData();
+            });
+
+            document.getElementById('btnRegionMaha').addEventListener('click', () => {
+                currentRegion = 'maharashtra';
+                document.getElementById('btnRegionMaha').classList.add('active');
+                document.getElementById('btnRegionDelhi').classList.remove('active');
+                document.getElementById('currentRegionBadge').innerText = 'Maharashtra';
+                map.setView([19.0760, 72.8777], 12);
+                reloadRegionData();
+            });
+
+            function reloadRegionData() {
+                fetchHeatmapData();
+                fetchZonesData();
+                fetchSensorsData();
+                fetchHotspotsData();
+            }
+
+            // Sub-tabs (Journey vs Simulator)
+            document.getElementById('subTabJourney').addEventListener('click', () => {
+                document.getElementById('subTabJourney').classList.add('active');
+                document.getElementById('subTabSimulator').classList.remove('active');
+                document.getElementById('journeyControlsSection').style.display = 'flex';
+                document.getElementById('simulatorControlsSection').style.display = 'none';
+            });
+
+            document.getElementById('subTabSimulator').addEventListener('click', () => {
+                document.getElementById('subTabSimulator').classList.add('active');
+                document.getElementById('subTabJourney').classList.remove('active');
+                document.getElementById('simulatorControlsSection').style.display = 'flex';
+                document.getElementById('journeyControlsSection').style.display = 'none';
+            });
+
+            // Simulator driving execution
+            document.getElementById('btnStartSimulation').addEventListener('click', () => {
+                if (!destCoords) destCoords = [startCoords[0] + 0.04, startCoords[1] + 0.04];
+                let step = 0;
+                const totalSteps = 20;
+
+                document.getElementById('btnStartSimulation').style.display = 'none';
+                document.getElementById('btnStopSimulation').style.display = 'block';
+
+                if (simulatorMarker) map.removeLayer(simulatorMarker);
+                const carIcon = L.divIcon({
+                    className: 'car-sim-marker',
+                    html: `<div style="background: #27c98e; color: #000; padding: 6px; border-radius: 50%; font-size: 14px; border: 2px solid #fff;"><i class="fas fa-car"></i></div>`,
+                    iconSize: [28, 28]
+                });
+                simulatorMarker = L.marker(startCoords, { icon: carIcon }).addTo(map);
+
+                simulatorInterval = setInterval(() => {
+                    step++;
+                    const lat = startCoords[0] + (destCoords[0] - startCoords[0]) * (step / totalSteps);
+                    const lon = startCoords[1] + (destCoords[1] - startCoords[1]) * (step / totalSteps);
+                    simulatorMarker.setLatLng([lat, lon]);
+
+                    fetchAqiPrediction(lat, lon, "Driving Simulation");
+
+                    if (step >= totalSteps) {
+                        clearInterval(simulatorInterval);
+                        document.getElementById('btnStartSimulation').style.display = 'block';
+                        document.getElementById('btnStopSimulation').style.display = 'none';
+                    }
+                }, 800);
+            });
+
+            document.getElementById('btnStopSimulation').addEventListener('click', () => {
+                if (simulatorInterval) clearInterval(simulatorInterval);
+                document.getElementById('btnStartSimulation').style.display = 'block';
+                document.getElementById('btnStopSimulation').style.display = 'none';
+            });
+
+            // Timeline pills
+            document.querySelectorAll('.timeline-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.timeline-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    activeHoursOffset = parseInt(this.dataset.hours);
+                    fetchAqiPrediction(currentLat, currentLon);
+                });
+            });
+
+            // Map Layer Toggles
+            document.getElementById('toggleHeatmapBtn').addEventListener('click', function() {
+                heatmapVisible = !heatmapVisible;
+                this.innerHTML = heatmapVisible ? '<i class="fas fa-fire"></i> ML Heatmap ON' : '<i class="fas fa-fire"></i> ML Heatmap OFF';
+                renderHeatmap();
+            });
+
+            document.getElementById('toggleZonesBtn').addEventListener('click', function() {
+                zonesVisible = !zonesVisible;
+                this.innerHTML = zonesVisible ? '<i class="fas fa-globe"></i> Zones ON' : '<i class="fas fa-globe"></i> Zones OFF';
+                fetchZonesData();
+            });
+
+            // Theme Toggle
+            document.getElementById('btnLightMode').addEventListener('click', () => {
+                document.body.classList.add('light-mode');
+                document.getElementById('btnLightMode').classList.add('active');
+                document.getElementById('btnDarkMode').classList.remove('active');
+            });
+
+            document.getElementById('btnDarkMode').addEventListener('click', () => {
+                document.body.classList.remove('light-mode');
+                document.getElementById('btnDarkMode').classList.add('active');
+                document.getElementById('btnLightMode').classList.remove('active');
+            });
+
+            // Deep Insights Modal
+            document.getElementById('tabDeepInsights').addEventListener('click', () => {
+                document.getElementById('deepInsightsModal').style.display = 'flex';
+                loadDeepInsightsModal();
+            });
+
+            document.getElementById('btnCloseInsightsModal').addEventListener('click', () => {
+                document.getElementById('deepInsightsModal').style.display = 'none';
+            });
+
+            async function loadDeepInsightsModal() {
+                try {
+                    const res = await fetch(`/api/pollution-sources?region=${currentRegion}`);
+                    if (res.ok) {
+                        const sources = await res.json();
+                        const grid = document.getElementById('modalSourcesGrid');
+                        if (sources && sources.length > 0) {
+                            grid.innerHTML = sources.map(s => `
+                                <div class="source-card">
+                                    <strong style="color: var(--accent-mint); font-size: 13px;">${s.label || s.type}</strong>
+                                    <span style="font-size: 11px; color: var(--text-secondary);">Intensity Contribution</span>
+                                    <span style="font-size: 16px; font-weight: 800; color: var(--text-primary); font-family: var(--font-mono);">${Math.round((s.intensity || 0.4) * 100)}%</span>
+                                </div>
+                            `).join('');
+                        }
+                    }
+                } catch (e) {
+                    console.log('Sources fallback');
+                }
+            }
+
+            // Initial load sequence
+            reloadRegionData();
+            fetchAqiPrediction(currentLat, currentLon, currentLocationName);
+        });
+    </script>
+</body>
+</html>

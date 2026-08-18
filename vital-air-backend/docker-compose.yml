@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: vitalair-postgres
+    environment:
+      POSTGRES_DB: vitalair
+      POSTGRES_USER: vitalair
+      POSTGRES_PASSWORD: vitalair_local_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - vitalair_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vitalair"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: .
+    container_name: vitalair-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://postgres:5432/vitalair
+      DB_USERNAME: vitalair
+      DB_PASSWORD: vitalair_local_dev
+      VITALAIR_JWT_SECRET: ${VITALAIR_JWT_SECRET:-change-me-in-production-min-32-chars}
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:-}
+      TOMTOM_API_KEY: ${TOMTOM_API_KEY:-}
+      NASA_FIRMS_API_KEY: ${NASA_FIRMS_API_KEY:-}
+      OPENAQ_API_KEY: ${OPENAQ_API_KEY:-}
+
+volumes:
+  vitalair_pgdata:

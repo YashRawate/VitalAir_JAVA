@@ -1,0 +1,28 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      # NOTE: no Flyway/Liquibase migration tooling is included in this
+      # migration's scope, so we let Hibernate manage the schema even in
+      # prod. For a real production rollout, swap this for `validate` and
+      # add versioned migrations instead.
+      ddl-auto: update
+    show-sql: false
+
+  h2:
+    console:
+      enabled: false
+
+logging:
+  level:
+    root: WARN
+    com.vitalair: INFO

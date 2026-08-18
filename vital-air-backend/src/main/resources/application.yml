@@ -1,0 +1,107 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  application:
+    name: vital-air-backend
+
+  datasource:
+    url: ${DB_URL:jdbc:h2:mem:vitalair;MODE=PostgreSQL;DB_CLOSE_DELAY=-1}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+    driver-class-name: ${DB_DRIVER:org.h2.Driver}
+
+  jpa:
+    hibernate:
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+    open-in-view: false
+
+  h2:
+    console:
+      enabled: ${H2_CONSOLE:false}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+logging:
+  level:
+    root: INFO
+    com.vitalair: INFO
+
+# ========== Vital Air application config ==========
+vitalair:
+  jwt:
+    secret: ${VITALAIR_JWT_SECRET:}
+    expiration-ms: ${VITALAIR_JWT_EXPIRATION_MS:86400000}
+
+  api-keys:
+    openweather: ${OPENWEATHER_API_KEY:}
+    tomtom: ${TOMTOM_API_KEY:}
+    nasa-firms: ${NASA_FIRMS_API_KEY:}
+    openaq: ${OPENAQ_API_KEY:}
+
+  external-apis:
+    openweather-aqi-url: https://api.openweathermap.org/data/2.5/air_pollution
+    openweather-weather-url: https://api.openweathermap.org/data/2.5/weather
+    openaq-url: https://api.openaq.org/v2/latest
+    open-meteo-aqi-url: https://air-quality-api.open-meteo.com/v1/air-quality
+    open-meteo-weather-url: https://api.open-meteo.com/v1/forecast
+    timeout-seconds: 10
+
+  # Static region/city reference data - replaces the hardcoded REGIONS / CITIES
+  # dicts in the original main.py. Add new regions/cities here without a rebuild.
+  regions:
+    delhi:
+      name: Delhi NCR
+      lat-min: 28.4
+      lat-max: 28.9
+      lon-min: 76.8
+      lon-max: 77.3
+      center-lat: 28.6139
+      center-lon: 77.2090
+      zoom: 10
+      default-density: 30
+      cities:
+        - { name: "New Delhi", lat: 28.6139, lon: 77.2090, type: capital, base-aqi: 178 }
+        - { name: "Anand Vihar", lat: 28.6468, lon: 77.3164, type: hotspot, base-aqi: 245 }
+        - { name: "ITO", lat: 28.6298, lon: 77.2423, type: hotspot, base-aqi: 215 }
+        - { name: "RK Puram", lat: 28.5633, lon: 77.1769, type: residential, base-aqi: 162 }
+        - { name: "Dwarka", lat: 28.5704, lon: 77.0653, type: residential, base-aqi: 145 }
+        - { name: "Rohini", lat: 28.7344, lon: 77.0895, type: residential, base-aqi: 153 }
+        - { name: "Noida", lat: 28.5355, lon: 77.3910, type: suburb, base-aqi: 188 }
+        - { name: "Gurgaon", lat: 28.4595, lon: 77.0266, type: suburb, base-aqi: 172 }
+        - { name: "Faridabad", lat: 28.4089, lon: 77.3178, type: suburb, base-aqi: 167 }
+        - { name: "Ghaziabad", lat: 28.6692, lon: 77.4538, type: suburb, base-aqi: 182 }
+    maharashtra:
+      name: Maharashtra
+      lat-min: 15.6
+      lat-max: 22.0
+      lon-min: 72.6
+      lon-max: 80.9
+      center-lat: 19.0760
+      center-lon: 72.8777
+      zoom: 7
+      default-density: 40
+      cities:
+        - { name: "Mumbai", lat: 19.0760, lon: 72.8777, type: capital, base-aqi: 148 }
+        - { name: "Pune", lat: 18.5204, lon: 73.8567, type: city, base-aqi: 122 }
+        - { name: "Nagpur", lat: 21.1458, lon: 79.0882, type: city, base-aqi: 105 }
+        - { name: "Nashik", lat: 19.9975, lon: 73.7898, type: city, base-aqi: 98 }
+        - { name: "Aurangabad", lat: 19.8762, lon: 75.3433, type: city, base-aqi: 112 }
+        - { name: "Solapur", lat: 17.6599, lon: 75.9064, type: city, base-aqi: 108 }
+        - { name: "Thane", lat: 19.2183, lon: 72.9781, type: suburb, base-aqi: 132 }
+        - { name: "Navi Mumbai", lat: 19.0330, lon: 73.0297, type: suburb, base-aqi: 128 }
+        - { name: "Kolhapur", lat: 16.7050, lon: 74.2433, type: city, base-aqi: 92 }
+        - { name: "Sangli", lat: 16.8544, lon: 74.5642, type: city, base-aqi: 88 }
