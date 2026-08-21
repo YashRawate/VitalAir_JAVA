@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: vital-air-backend
+    runtime: docker
+    dockerfilePath: ./vital-air-backend/Dockerfile
+    dockerContext: ./vital-air-backend
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: PORT
+        value: 8080
+      - key: DB_URL
+        fromDatabase:
+          name: vital-air-db
+          property: connectionString
+      - key: DB_USERNAME
+        fromDatabase:
+          name: vital-air-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: vital-air-db
+          property: password
+      - key: VITALAIR_JWT_SECRET
+        generateValue: true
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: TOMTOM_API_KEY
+        sync: false
+      - key: NASA_FIRMS_API_KEY
+        sync: false
+      - key: OPENAQ_API_KEY
+        sync: false
+
+databases:
+  - name: vital-air-db
+    plan: free
+    databaseName: vitalair
+    user: vitalair
