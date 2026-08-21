@@ -22,6 +22,19 @@
 
 ---
 
+## 🏆 1st Place Winner — ECO-Hackathon @ IIT (BHU) (TECHNEX)
+
+> 🥇 **1st Place Overall Champion**: VitalAir won **1st Place** at the prestigious **ECO-Hackathon** conducted by **IIT (BHU) Varanasi (TECHNEX'26)**!
+
+### 🔄 Project Architecture Evolution
+
+| Stage | Technology Stack | Infrastructure & Hosting | Key Architecture Highlights |
+| :--- | :--- | :--- | :--- |
+| **Phase 1 (Hackathon Winner)** | Python (FastAPI), AWS Lambdas, DynamoDB, S3 | AWS Cloud Infrastructure | Initial proof-of-concept prototype built during the IIT (BHU) ECO-Hackathon. |
+| **Phase 2 (Enterprise Re-Engineering)** | **Java 21**, **Spring Boot 3.3.4**, **PostgreSQL 16**, **Spring Security (JWT)** | **Render Cloud Platform** (Automated Docker Blueprint) | Production-grade enterprise re-architecture built from scratch by **Yash Kumar Rawate**: Strategy pattern spatial engine (IDW/RBF/Kriging), stateless JWT auth, multi-API resilience failover, and live vehicle telemetry driving simulator. |
+
+---
+
 ## 📌 Executive Summary for Recruiters & Engineering Managers
 
 **VitalAir** is an enterprise-grade, hyper-local **Air Quality Intelligence & Pollution-Aware Navigation System**. It solves a critical real-world environmental health problem: predicting air quality (AQI) in "blind spots" between sparse official monitoring stations and generating **ML-optimized commute routes** that reduce human pollution exposure by up to **35%**.
