@@ -15,14 +15,6 @@ services:
         fromDatabase:
           name: vital-air-db
           property: connectionString
-      - key: DB_USERNAME
-        fromDatabase:
-          name: vital-air-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: vital-air-db
-          property: password
       - key: VITALAIR_JWT_SECRET
         generateValue: true
       - key: OPENWEATHER_API_KEY

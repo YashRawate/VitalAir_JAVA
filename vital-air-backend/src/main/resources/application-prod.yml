@@ -3,19 +3,13 @@ spring:
     activate:
       on-profile: prod
 
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      # NOTE: no Flyway/Liquibase migration tooling is included in this
-      # migration's scope, so we let Hibernate manage the schema even in
-      # prod. For a real production rollout, swap this for `validate` and
-      # add versioned migrations instead.
       ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
     show-sql: false
 
   h2:
