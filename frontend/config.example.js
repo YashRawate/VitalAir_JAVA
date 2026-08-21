@@ -5,4 +5,4 @@
 // src="config.js"></script> tag in index.html BEFORE the main inline
 // <script> block. If frontend and backend share an origin, delete this
 // file and the <script> tag - index.html already defaults to same-origin.
-window.VITAL_AIR_API_BASE = "https://your-backend.onrender.com";
+window.VITAL_AIR_API_BASE = "https://vital-air-backend.onrender.com";
